@@ -1,0 +1,30 @@
+{
+  "name": "breakout",
+  "version": "1.0.0",
+  "scripts": {
+    "clean": "rm -rf dist dist/tsconfig.tsbuildinfo && echo 'cleaned!'",
+    "build:tsc": "tsc --build --noEmit",
+    "build:rollup": "rollup -c",
+    "build": "npm run clean && npm run build:rollup",
+    "watch": "rollup -c --watch"
+  },
+  "//": "we don't want to be imported, so no files, no main, no exports",
+  "files": [],
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "//": "re: file ref to xelly.js --> see rollup.config resolve.alias as well:",
+  "dependencies": {
+    "excalibur": "~0.30.3",
+    "@xelly/xelly.js": "1.0.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^12.1.2",
+    "rollup": "^4.30.1",
+    "tslib": "^2.8.1",
+    "typescript": "~5.7.3"
+  },
+  "sideEffects": true
+}
