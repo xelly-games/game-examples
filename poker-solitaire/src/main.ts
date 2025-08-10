@@ -488,6 +488,61 @@ class DeckAndScore extends Actor {
 
 // --
 
+const createUndoButton = (engine: Engine) => {
+    const buttonPaddingX = 4;
+    const buttonPaddingY = 4;
+    const buttonMarginLeft = 4;
+    const buttonMarginRight = 4;
+    const buttonMarginY = 4;
+    const undoTextSize = font14.measureText('undo');
+    const undoButtonClickArea = new BoundingBox({
+        top: 0,
+        left: 0,
+        right: undoTextSize.width + buttonPaddingX * 2 + buttonMarginLeft + buttonMarginRight,
+        bottom: undoTextSize.height + buttonPaddingY * 2 + buttonMarginY * 2
+    });
+    const undoButton = new Actor({
+        anchor: Vector.Zero,
+        pos: vec(engine.drawWidth - undoButtonClickArea.width, 0),
+        width: undoButtonClickArea.width,
+        height: undoButtonClickArea.height,
+        color: Color.Transparent
+    });
+    const undoButtonOutline = new Actor({
+        anchor: Vector.Zero,
+        pos: vec(buttonMarginLeft, buttonMarginY)
+    });
+    undoButtonOutline.graphics.use(
+        createOpenRect(undoTextSize.width + buttonPaddingX * 2,
+            undoTextSize.height + buttonPaddingY * 2,
+            Color.LightGray, 2, false));
+    undoButton.addChild(undoButtonOutline);
+    const undoLabel = new Label({
+        pos: vec(buttonPaddingX, buttonPaddingY),
+        text: 'undo',
+        font: font14,
+        color: Color.LightGray
+    });
+    undoButtonOutline.addChild(undoLabel);
+    // initially everything is hidden:
+    undoLabel.graphics.isVisible = false;
+    undoButtonOutline.graphics.isVisible = false;
+    undoButton.graphics.isVisible = false;
+    undoButton.on('hideAll*', () => {
+        undoLabel.graphics.isVisible = false;
+        undoButtonOutline.graphics.isVisible = false;
+        undoButton.graphics.isVisible = false;
+    });
+    undoButton.on('showAll*', () => {
+        undoLabel.graphics.isVisible = true;
+        undoButtonOutline.graphics.isVisible = true;
+        undoButton.graphics.isVisible = true;
+    });
+    return undoButton;
+};
+
+// --
+
 const createGameEndPane = (engine: Engine, message: string) => {
     //
     const box = font24.measureText(message);
@@ -522,7 +577,6 @@ const createGameEndPane = (engine: Engine, message: string) => {
 
 /** Install. */
 export const install: XellyInstallFunction = (context: XellyContext, engine: Engine) => {
-    console.log('install...'); // todo
     const deck: Card[] = suits.flatMap(suit => ranks.map(rank => ({
         suit,
         rank
@@ -593,14 +647,7 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
 
         const moveStates: MoveState[] = [];
 
-        const undo = new Label({
-            pos: vec(engine.drawWidth - font14.measureText('undo').width - 10, 10),
-            text: 'undo',
-            font: font14,
-            color: Color.Gray,
-            z: 100,
-            visible: false /*initially*/
-        });
+        const undoButton = createUndoButton(engine);
 
         grid.on('press*', ((loc: Vector) => {
             if (state[loc.x/*row*/][loc.y/*col*/] === undefined && deckAndScore.deck.isFaceUpCardActive) {
@@ -642,11 +689,11 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
                     completedRow,
                     completedCol
                 });
-                undo.graphics.isVisible = true;
+                undoButton.emit('showAll*');
             }
         }) as Handler<unknown>);
 
-        undo.on('pointerdown', () => {
+        undoButton.on('pointerdown', () => {
             if (topCardIndex > 0 && /*expected:*/moveStates.length > 0) {
                 --topCardIndex;
                 const topCardSpriteIndex = cardToSpriteIndex(shuffled[topCardIndex]);
@@ -663,9 +710,13 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
                 if (lastMoveState.completedCol !== undefined) {
                     grid.removeColScore(lastMoveState.completedCol);
                 }
-                undo.graphics.isVisible = topCardIndex > 0;
+                if (topCardIndex > 0) {
+                    undoButton.emit('showAll*');
+                } else {
+                    undoButton.emit('hideAll*');
+                }
             }
         });
-        engine.add(undo);
+        engine.add(undoButton);
     });
 };
