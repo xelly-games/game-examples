@@ -150,9 +150,22 @@ const createLabel_yCentered = (text: string, font: Font, x: number, yCenter: num
     });
 };
 
+const createFilledRect = (
+    width: number, height?: number, color: Color = Color.DarkGray, strokeColor: Color = Color.White, lineWidth: number = 2) => {
+    return new Rectangle({
+        quality: 4,
+        width: width,
+        height: height || width,
+        lineWidth: lineWidth,
+        strokeColor: strokeColor,
+        color: color
+    });
+};
+
 const createOpenRect = (
     width: number, height?: number, color: Color = Color.DarkGray, lineWidth: number = 2, dashed: boolean = true) => {
     return new Rectangle({
+        quality: 4,
         width: width,
         height: height || width,
         lineWidth: lineWidth,
@@ -494,7 +507,10 @@ const createUndoButton = (engine: Engine) => {
     const buttonMarginLeft = 4;
     const buttonMarginRight = 4;
     const buttonMarginY = 4;
-    const undoTextSize = font14.measureText('undo');
+    const useColor = Color.DarkGray;
+    const useFont = font14;
+    const undoTextSize = useFont.measureText('undo');
+    const useOutlineStrokeWidth = 2;
     const undoButtonClickArea = new BoundingBox({
         top: 0,
         left: 0,
@@ -515,15 +531,27 @@ const createUndoButton = (engine: Engine) => {
     undoButtonOutline.graphics.use(
         createOpenRect(undoTextSize.width + buttonPaddingX * 2,
             undoTextSize.height + buttonPaddingY * 2,
-            Color.LightGray, 2, false));
+            useColor, useOutlineStrokeWidth, false));
+    undoButtonOutline.graphics.add('filled',
+        createFilledRect(undoTextSize.width + buttonPaddingX * 2,
+            undoTextSize.height + buttonPaddingY * 2, useColor, Color.White,
+            useOutlineStrokeWidth));
     undoButton.addChild(undoButtonOutline);
     const undoLabel = new Label({
-        pos: vec(buttonPaddingX, buttonPaddingY),
+        pos: vec(buttonPaddingX + 1, buttonPaddingY),
         text: 'undo',
-        font: font14,
-        color: Color.LightGray
+        font: useFont,
+        color: useColor
     });
     undoButtonOutline.addChild(undoLabel);
+    const undoLabelWhite = new Label({
+        pos: vec(buttonPaddingX, buttonPaddingY),
+        text: 'undo',
+        font: useFont,
+        color: Color.White
+    });
+    undoLabelWhite.graphics.isVisible = false;
+    undoButtonOutline.addChild(undoLabelWhite);
     // initially everything is hidden:
     undoLabel.graphics.isVisible = false;
     undoButtonOutline.graphics.isVisible = false;
@@ -537,6 +565,29 @@ const createUndoButton = (engine: Engine) => {
         undoLabel.graphics.isVisible = true;
         undoButtonOutline.graphics.isVisible = true;
         undoButton.graphics.isVisible = true;
+    });
+    undoButton.on('pointerdown', () => {
+        // -- flicker button --
+        let cycle = 1;
+        const cycleInterval = setInterval(() => {
+            if (cycle === 1) {
+                undoLabel.graphics.isVisible = false;
+                undoLabelWhite.graphics.isVisible = true;
+                undoButtonOutline.graphics.use('filled');
+            } else {
+                undoLabel.graphics.isVisible = true;
+                undoLabelWhite.graphics.isVisible = false;
+                undoButtonOutline.graphics.use('default');
+            }
+            cycle = 1 - cycle;
+        }, 75);
+        setTimeout(() => {
+            clearInterval(cycleInterval);
+            undoLabel.graphics.isVisible = true;
+            undoLabelWhite.graphics.isVisible = false;
+            undoButtonOutline.graphics.use('default');
+            undoButton.emit('press*');
+        }, 300);
     });
     return undoButton;
 };
@@ -693,7 +744,7 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
             }
         }) as Handler<unknown>);
 
-        undoButton.on('pointerdown', () => {
+        undoButton.on('press*', () => {
             if (topCardIndex > 0 && /*expected:*/moveStates.length > 0) {
                 --topCardIndex;
                 const topCardSpriteIndex = cardToSpriteIndex(shuffled[topCardIndex]);

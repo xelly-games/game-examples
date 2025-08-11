@@ -72,7 +72,7 @@ const EndingRules: EndingRule[] = [
     { min: 200, msg: "Wow. How'd you do that?" },
     { min: 175, msg: "Stellar." },
     { min: 150, msg: "Now we are talking." },
-    { min: 130, msg: "Pretty. Pretty. Pretty good." },
+    { min: 130, msg: "Pretty. Pretty. Good." },
     { min: 120, msg: "Not bad." },
     { min: 100, msg: "About average." },
     { min: 50, msg: "Meh. Try again." },
