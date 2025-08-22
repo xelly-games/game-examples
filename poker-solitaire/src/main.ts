@@ -18,14 +18,19 @@ import {
     Label,
     Rectangle,
     SpriteSheet,
-    SpriteSheetGridOptions,
     vec,
     Vector
 } from 'excalibur';
 import {Card, ranks, suits} from './card-types';
 //import cardsLg from './cards-lg.png';
 import cardsMed from './cards-md.png';
+import undoSvg from './undo.svg';
+import undoWhiteSvg from './undo-white.svg';
 import {endingMessage, pokerHandScores, vibe_getPokerHand} from './vibe_hands';
+
+// ---
+const undoImageSource = new ImageSource(undoSvg);
+const undoWhiteImageSource = new ImageSource(undoWhiteSvg);
 
 // ---
 
@@ -501,6 +506,100 @@ class DeckAndScore extends Actor {
 
 // --
 
+const createUndoGraphicalButton = (engine: Engine, loadedImageSource: ImageSource, loadedWhiteImageSource: ImageSource) => {
+    const sprite = loadedImageSource.toSprite();
+    const whiteSprite = loadedWhiteImageSource.toSprite();
+    const buttonPaddingX = 4;
+    const buttonPaddingY = 4;
+    const buttonMarginLeft = 4;
+    const buttonMarginRight = 6;
+    const buttonMarginY = 4;
+    const buttonIconDim = 25;
+    const useColor = Color.fromHex('#e9e9e9');
+    const useOutlineStrokeWidth = 2;
+    const undoButtonClickArea = new BoundingBox({
+        top: 0,
+        left: 0,
+        right: buttonIconDim + buttonPaddingX * 2 + buttonMarginLeft + buttonMarginRight,
+        bottom: buttonIconDim + buttonPaddingY * 2 + buttonMarginY * 2
+    });
+    const undoButton = new Actor({
+        anchor: Vector.Zero,
+        pos: vec(engine.drawWidth - undoButtonClickArea.width, 0),
+        width: undoButtonClickArea.width,
+        height: undoButtonClickArea.height,
+        color: Color.Transparent
+    });
+    const undoButtonOutline = new Actor({
+        anchor: Vector.Zero,
+        pos: vec(buttonMarginLeft, buttonMarginY),
+    });
+    undoButtonOutline.graphics.add('outline',
+        createOpenRect(buttonIconDim + buttonPaddingX * 2,
+            buttonIconDim + buttonPaddingY * 2,
+            useColor, useOutlineStrokeWidth, false));
+    undoButtonOutline.graphics.add('filled',
+        createFilledRect(buttonIconDim + buttonPaddingX * 2,
+            buttonIconDim + buttonPaddingY * 2, useColor, Color.White,
+            useOutlineStrokeWidth));
+    undoButton.addChild(undoButtonOutline);
+    const undoButtonIcon = new Actor({
+        anchor: Vector.Zero,
+        pos: vec(buttonPaddingX, buttonPaddingY),
+        scale: vec(buttonIconDim / sprite.width, buttonIconDim / sprite.height)
+    });
+    undoButtonIcon.graphics.use(sprite);
+    undoButtonOutline.addChild(undoButtonIcon);
+    const undoButtonWhiteIcon = new Actor({
+        anchor: Vector.Zero,
+        pos: vec(buttonPaddingX, buttonPaddingY),
+        scale: vec(buttonIconDim / sprite.width, buttonIconDim / sprite.height)
+    });
+    undoButtonWhiteIcon.graphics.use(whiteSprite);
+    undoButtonOutline.addChild(undoButtonWhiteIcon);
+// initially everything is hidden:
+    undoButtonIcon.graphics.isVisible = false;
+    undoButtonOutline.graphics.isVisible = false;
+    undoButton.graphics.isVisible = false;
+    undoButton.on('hideAll*', () => {
+        undoButtonIcon.graphics.isVisible = false;
+        undoButtonWhiteIcon.graphics.isVisible = false;
+        undoButtonOutline.graphics.isVisible = false;
+        undoButton.graphics.isVisible = false;
+    });
+    undoButton.on('showAll*', () => {
+        undoButtonIcon.graphics.isVisible = true;
+        undoButtonOutline.graphics.isVisible = true;
+        undoButton.graphics.isVisible = true;
+        undoButtonWhiteIcon.graphics.isVisible = false;
+        undoButtonOutline.graphics.use('default');
+    });
+    undoButton.on('pointerdown', () => {
+        // -- flicker button --
+        let cycle = 1;
+        const cycleInterval = setInterval(() => {
+            if (cycle === 1) {
+                undoButtonIcon.graphics.isVisible = false;
+                undoButtonWhiteIcon.graphics.isVisible = true;
+                undoButtonOutline.graphics.use('filled');
+            } else {
+                undoButtonIcon.graphics.isVisible = true;
+                undoButtonWhiteIcon.graphics.isVisible = false;
+                undoButtonOutline.graphics.use('default');
+            }
+            cycle = 1 - cycle;
+        }, 75);
+        setTimeout(() => {
+            clearInterval(cycleInterval);
+            undoButtonIcon.graphics.isVisible = true;
+            undoButtonWhiteIcon.graphics.isVisible = false;
+            undoButtonOutline.graphics.use('default');
+            undoButton.emit('press*');
+        }, 151);
+    });
+    return undoButton;
+};
+
 const createUndoButton = (engine: Engine) => {
     const buttonPaddingX = 4;
     const buttonPaddingY = 4;
@@ -698,76 +797,82 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
 
         const moveStates: MoveState[] = [];
 
-        const undoButton = createUndoButton(engine);
+        Promise.all([
+            undoWhiteImageSource.load(),
+            undoImageSource.load()
+        ]).then(() => {
+            // const undoButton = createUndoButton(engine);
+            const undoButton = createUndoGraphicalButton(engine, undoImageSource, undoWhiteImageSource);
 
-        grid.on('press*', ((loc: Vector) => {
-            if (state[loc.x/*row*/][loc.y/*col*/] === undefined && deckAndScore.deck.isFaceUpCardActive) {
-                const prevScore = scoreNumber;
-                let completedRow, completedCol;
-                state[loc.x][loc.y] = shuffled[topCardIndex];
-                const currIndex = cardToSpriteIndex(shuffled[topCardIndex]);
-                const currSprite = spriteSheet.getSprite(currIndex.x, currIndex.y);
-                grid.layDownCard(currSprite, loc);
-                ++topCardIndex;
-                const topCardSpriteIndex = cardToSpriteIndex(shuffled[topCardIndex]);
-                const sprite = spriteSheet.getSprite(topCardSpriteIndex.x, topCardSpriteIndex.y);
-                deckAndScore.deck.animateReplaceFaceUpCard(sprite);
-                const row = getRow(state, loc.x);
-                const col = getColumn(state, loc.y);
-                if (row.every(c => c !== undefined)) {
-                    const rowHand = vibe_getPokerHand(row);
-                    const rowScore = pokerHandScores.get(rowHand) || 0;
-                    scoreNumber += rowScore;
-                    grid.updateRowScore(loc.x, rowScore);
-                    completedRow = loc.x; // !!
-                }
-                if (col.every(c => c !== undefined)) {
-                    const colHand = vibe_getPokerHand(col);
-                    const colScore = pokerHandScores.get(colHand) || 0;
-                    scoreNumber += colScore;
-                    grid.updateColScore(loc.y, colScore);
-                    completedCol = loc.y; // !!
-                }
-                deckAndScore.score.updateScoreValue(scoreNumber);
-                if (state.every(x => x.every(c => c !== undefined))) {
-                    const msg = `Score: ${scoreNumber}. ${endingMessage(scoreNumber)}`;
-                    engine.add(createGameEndPane(engine, msg));
-                    engine.emit('xelly:terminate');
-                }
-                moveStates.push({
-                    loc,
-                    scoreIncrease: scoreNumber - prevScore,
-                    completedRow,
-                    completedCol
-                });
-                undoButton.emit('showAll*');
-            }
-        }) as Handler<unknown>);
-
-        undoButton.on('press*', () => {
-            if (topCardIndex > 0 && /*expected:*/moveStates.length > 0) {
-                --topCardIndex;
-                const topCardSpriteIndex = cardToSpriteIndex(shuffled[topCardIndex]);
-                const sprite = spriteSheet.getSprite(topCardSpriteIndex.x, topCardSpriteIndex.y);
-                deckAndScore.deck.hardReplaceFaceUpCard(sprite);
-                const lastMoveState = moveStates.pop()!;
-                state[lastMoveState.loc.x][lastMoveState.loc.y] = undefined;
-                grid.unLayDownCard(lastMoveState.loc);
-                scoreNumber -= lastMoveState.scoreIncrease;
-                deckAndScore.score.updateScoreValue(scoreNumber);
-                if (lastMoveState.completedRow !== undefined) {
-                    grid.removeRowScore(lastMoveState.completedRow);
-                }
-                if (lastMoveState.completedCol !== undefined) {
-                    grid.removeColScore(lastMoveState.completedCol);
-                }
-                if (topCardIndex > 0) {
+            grid.on('press*', ((loc: Vector) => {
+                if (state[loc.x/*row*/][loc.y/*col*/] === undefined && deckAndScore.deck.isFaceUpCardActive) {
+                    const prevScore = scoreNumber;
+                    let completedRow, completedCol;
+                    state[loc.x][loc.y] = shuffled[topCardIndex];
+                    const currIndex = cardToSpriteIndex(shuffled[topCardIndex]);
+                    const currSprite = spriteSheet.getSprite(currIndex.x, currIndex.y);
+                    grid.layDownCard(currSprite, loc);
+                    ++topCardIndex;
+                    const topCardSpriteIndex = cardToSpriteIndex(shuffled[topCardIndex]);
+                    const sprite = spriteSheet.getSprite(topCardSpriteIndex.x, topCardSpriteIndex.y);
+                    deckAndScore.deck.animateReplaceFaceUpCard(sprite);
+                    const row = getRow(state, loc.x);
+                    const col = getColumn(state, loc.y);
+                    if (row.every(c => c !== undefined)) {
+                        const rowHand = vibe_getPokerHand(row);
+                        const rowScore = pokerHandScores.get(rowHand) || 0;
+                        scoreNumber += rowScore;
+                        grid.updateRowScore(loc.x, rowScore);
+                        completedRow = loc.x; // !!
+                    }
+                    if (col.every(c => c !== undefined)) {
+                        const colHand = vibe_getPokerHand(col);
+                        const colScore = pokerHandScores.get(colHand) || 0;
+                        scoreNumber += colScore;
+                        grid.updateColScore(loc.y, colScore);
+                        completedCol = loc.y; // !!
+                    }
+                    deckAndScore.score.updateScoreValue(scoreNumber);
+                    if (state.every(x => x.every(c => c !== undefined))) {
+                        const msg = `Score: ${scoreNumber}. ${endingMessage(scoreNumber)}`;
+                        engine.add(createGameEndPane(engine, msg));
+                        engine.emit('xelly:terminate');
+                    }
+                    moveStates.push({
+                        loc,
+                        scoreIncrease: scoreNumber - prevScore,
+                        completedRow,
+                        completedCol
+                    });
                     undoButton.emit('showAll*');
-                } else {
-                    undoButton.emit('hideAll*');
                 }
-            }
+            }) as Handler<unknown>);
+
+            undoButton.on('press*', () => {
+                if (topCardIndex > 0 && /*expected:*/moveStates.length > 0) {
+                    --topCardIndex;
+                    const topCardSpriteIndex = cardToSpriteIndex(shuffled[topCardIndex]);
+                    const sprite = spriteSheet.getSprite(topCardSpriteIndex.x, topCardSpriteIndex.y);
+                    deckAndScore.deck.hardReplaceFaceUpCard(sprite);
+                    const lastMoveState = moveStates.pop()!;
+                    state[lastMoveState.loc.x][lastMoveState.loc.y] = undefined;
+                    grid.unLayDownCard(lastMoveState.loc);
+                    scoreNumber -= lastMoveState.scoreIncrease;
+                    deckAndScore.score.updateScoreValue(scoreNumber);
+                    if (lastMoveState.completedRow !== undefined) {
+                        grid.removeRowScore(lastMoveState.completedRow);
+                    }
+                    if (lastMoveState.completedCol !== undefined) {
+                        grid.removeColScore(lastMoveState.completedCol);
+                    }
+                    if (topCardIndex > 0) {
+                        undoButton.emit('showAll*');
+                    } else {
+                        undoButton.emit('hideAll*');
+                    }
+                }
+            });
+            engine.add(undoButton);
         });
-        engine.add(undoButton);
     });
 };

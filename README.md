@@ -16,8 +16,12 @@ the social microgames platform!
 
 ## Build Instructions
 
+To build any game, run `npm run build` in the game's directory.
+
+To run/test the game, use the https://xelly.games/utilty page.
+
 The projects use TypeScript and builds to IIFE (Immediately Invoked Function
 Expression) format.
+
 Games are designed to be dynamically loaded with xelly.js/excalibur explicitly
 provided by the host platform ([https://xelly.games](https://xelly.games)).
-

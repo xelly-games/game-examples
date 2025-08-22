@@ -4,11 +4,14 @@ import {
     Engine,
     Font,
     FontUnit,
-    Label,
+    ImageSource,
+    Label, Line,
+    Rectangle,
     vec,
     Vector
 } from 'excalibur';
-import xel, {
+import * as xel from '@xelly/xelly.js';
+import {
     XellyContext,
     XellyGameType,
     XellyInstallFunction,
@@ -16,7 +19,28 @@ import xel, {
     XellyPixelScheme,
     XellySpriteActor
 } from '@xelly/xelly.js';
-import {SudokuCreator} from '@algorithm.ts/sudoku'
+import {SudokuCreator} from '@algorithm.ts/sudoku';
+import {
+    createUndoGraphicalButton
+} from './undo';
+// import editPenGreen from './edit-pen-green.svg';
+import editPenBlue from './edit-pen-blue.svg';
+// import editPenYellow from './edit-pen-yellow.svg';
+import editPenRed from './edit-pen-red.svg';
+import editPenGray from './edit-pen-gray.svg';
+import undoSvg from './undo.svg';
+import undoWhiteSvg from './undo-white.svg';
+
+// ---
+const undoImageSource = new ImageSource(undoSvg);
+const undoWhiteImageSource = new ImageSource(undoWhiteSvg);
+
+// ---
+// const editPenGreenImage = new ImageSource(editPenGreen);
+const editPenBlueImage = new ImageSource(editPenBlue);
+// const editPenYellowImage = new ImageSource(editPenYellow);
+const editPenRedImage = new ImageSource(editPenRed);
+const editPenGrayImage = new ImageSource(editPenGray);
 
 /** Metadata. */
 export const metadata: XellyMetadata = {
@@ -54,22 +78,29 @@ class Square extends XellySpriteActor {
 
     private readonly dim: number;
     private readonly pointerChild?: Actor;
-    private valueChild?: Actor;
+    valueChild?: Actor;
+    dynamicValue?: number;
+    readonly fixedValue?: number;
 
     constructor(context: XellyContext, pixelX: number, pixelY: number, dim: number, fixedValue?: number) {
-        let mainSprite = xel.create.rect(0, 0, dim, dim);
-        super(xel.actorArgs.fromPixelBasedArgs(context, {
-            x: pixelX,
-            y: pixelY,
+        super({
             anchor: Vector.Zero,
-        }), context, mainSprite);
+            x: xel.convert.toCssScale(context, pixelX),
+            y: xel.convert.toCssScale(context, pixelY)
+        }, context, []);
+        this.graphics.use(new Rectangle({
+            width: xel.convert.toCssScale(context, dim),
+            height: xel.convert.toCssScale(context, dim),
+            color: Color.Transparent
+        }));
         this.on('pointerdown', (e) => {
             this.emit('square:clickaway');
             e.cancel();
         });
         this.dim = dim;
+        this.fixedValue = fixedValue;
         if (fixedValue !== undefined) {
-            this.valueChild = this.createLabelEntity(fixedValue, true);
+            this.valueChild = this.createLabelEntity(fixedValue, true, Color.Black);
             this.addChild(this.valueChild);
         } else {
             // the invisible clickable entity:
@@ -94,9 +125,9 @@ class Square extends XellySpriteActor {
         }
     }
 
-    createLabelEntity(val: number, fixed?: boolean) {
+    createLabelEntity(val: number, fixed: boolean, color: Color): Actor {
         const squareDimCss = xel.convert.toCssScale(this.context, this.dim);
-        const font = createFont(fixed ? Color.Black : this.context.color.fg,
+        const font = createFont(fixed ? Color.Black : color,
             Math.round(squareDimCss * 0.6));
         const text = `${val}`;
         const m = font.measureText(text);
@@ -108,17 +139,19 @@ class Square extends XellySpriteActor {
     }
 
     clearUserValue() {
-        this.setUserValue(undefined);
+        this.setUserValue(undefined, Color.Black/*unused*/);
+        this.dynamicValue = undefined;
     }
 
-    setUserValue(val: number | undefined) {
+    setUserValue(val: number | undefined, color: Color) {
         if (this.valueChild) {
             this.removeChild(this.valueChild);
             this.valueChild = undefined;
         }
         if (val !== undefined) {
-            this.valueChild = this.createLabelEntity(val);
+            this.valueChild = this.createLabelEntity(val, false, color);
             this.addChild(this.valueChild);
+            this.dynamicValue = val;
         }
     }
 
@@ -126,15 +159,35 @@ class Square extends XellySpriteActor {
 
 const PickerMargin = 5;
 
-class Picker extends XellySpriteActor {
+const createOpenRect = (
+    width: number, height?: number, color: Color = Color.LightGray, lineWidth: number = 2) => {
+    return new Rectangle({
+        width: width,
+        height: height || width,
+        lineWidth: lineWidth,
+        strokeColor: color,
+        color: Color.Transparent
+    });
+};
 
+class Picker extends Actor {
+
+    private readonly context: XellyContext;
     private readonly squareDim: number;
+    private penColor: Color = Color.Black;
+    private border!: Actor;
 
-    constructor(context: XellyContext, squareDim: number) {
-        super({z: 1000, anchor: Vector.Zero}, context,
-            xel.create.rect(0, 0, PickerMargin * 2 + squareDim * 3, PickerMargin * 2 + squareDim * 4),
-            {bgAlpha: 0.95});
+    constructor(context: XellyContext, squareDim: number, initialPenColor: Color) {
+        super({
+            z: 1000, anchor: Vector.Zero,
+            width: xel.convert.toCssScale(context, PickerMargin * 2 + squareDim * 3),
+            height: xel.convert.toCssScale(context, PickerMargin * 2 + squareDim * 4),
+            color: Color.fromRGB(255, 255, 255, 0.95)
+        });
+        this.context = context;
+        this.penColor = initialPenColor
         this.squareDim = squareDim;
+        this.addBorder(initialPenColor);
         this.on('pointerdown', (e) => {
             this.emit('picker:cancel');
             e.cancel();
@@ -142,6 +195,30 @@ class Picker extends XellySpriteActor {
     }
 
     override onInitialize(engine: Engine): void {
+        this.reinitialize();
+    }
+
+    addBorder(color: Color) {
+        const openRect = createOpenRect(
+            xel.convert.toCssScale(this.context, PickerMargin * 2 + this.squareDim * 3),
+            xel.convert.toCssScale(this.context, PickerMargin * 2 + this.squareDim * 4),
+            color,
+            6/**/);
+        this.border = new Actor({
+            z: 1001, anchor: Vector.Zero,
+        });
+        this.border.graphics.use(openRect);
+        this.addChild(this.border);
+    }
+
+    updatePenColor(color: Color) {
+        this.penColor = color;
+        this.removeAllChildren();
+        this.addBorder(color);
+        this.reinitialize();
+    }
+
+    reinitialize() {
         const pickerMarginCss = xel.convert.toCssScale(this.context, PickerMargin);
         for (let i = 1; i < 11; ++i) {
             const row = Math.floor((i - 1) / 3);
@@ -150,7 +227,7 @@ class Picker extends XellySpriteActor {
                 col++;
             }
             const squareDimCss = xel.convert.toCssScale(this.context, this.squareDim);
-            const font = createFont(this.context.color.fg, Math.round(squareDimCss * 0.8)/*, 'monospace'*/);
+            const font = createFont(this.penColor, Math.round(squareDimCss * 0.8)/*, 'monospace'*/);
             const text = `${i === 10 ? '_' : i}`;
             const m = font.measureText(text);
             const label = new Label({
@@ -168,6 +245,7 @@ class Picker extends XellySpriteActor {
                     pickerMarginCss + row * squareDimCss),
                 width: squareDimCss,
                 height: squareDimCss,
+                color: Color.Transparent,
                 z: 3000
             });
             block.on('pointerdown', (e) => {
@@ -218,7 +296,10 @@ const readGameStateFromContextParameters = (context: XellyContext) => {
     return undefined;
 };
 
+const defaultThemeColor = Color.Black;
+
 export const install: XellyInstallFunction = (context: XellyContext, engine: Engine) => {
+    console.log('xelly-sudoku-hi-res: install');
     const puzzleFromConfig = readPuzzleFromContextConfig(context);
     const userGameState = readGameStateFromContextParameters(context);
     let usePuzzle: number[];
@@ -228,13 +309,20 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
         useSolution = (puzzleFromConfig.solution as number[]).map(x => x < 0 ? x : x + 1);
     } else {
         // @see https://github.com/guanghechen/algorithm.ts/tree/@algorithm.ts/sudoku@4.0.2/packages/sudoku
-        const creator = new SudokuCreator({ childMatrixWidth: 3 });
+        const creator = new SudokuCreator({childMatrixWidth: 3});
         const easy = creator.createSudoku(0.3);
         const puzzle = easy.puzzle.map(x => x < 0 ? x : x + 1);
         const solution = easy.solution.map(x => x < 0 ? x : x + 1);
         usePuzzle = puzzle;
         useSolution = solution;
     }
+
+    //const penColorYellow = Color.fromHex('#FCE883');
+    const penColorRed = Color.fromHex('#EE204D');
+    const penColorBlue = Color.fromHex('#1F75FE');
+    //const penColorGreen = Color.fromHex('#1CAC78');
+    const penColorGray = Color.fromHex('#95918C');
+    let currentPenColor = penColorBlue; // starting color
 
     let runtimeUserState: number[];
     if (userGameState) {
@@ -257,8 +345,11 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
     let pickerOffscreenPos: Vector | undefined = undefined;
     let puzzleIndexScope: number | undefined = undefined;
 
+    // -- squares --
+    const squares: Square[] = [];
+
     // -- picker --
-    const picker = new Picker(context, Math.round(squareDim * 1.3));
+    const picker = new Picker(context, Math.round(squareDim * 1.3), currentPenColor);
 
     const showGameWonPanel = (text: string) => {
         const message = xel.actors.fromText(context, text,
@@ -267,7 +358,7 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
             anchor: Vector.Zero,
             width: engine.drawWidth,
             height: message.height * 4,
-            color: context.color.fg,
+            color: defaultThemeColor,
             pos: vec(0, engine.drawHeight / 2 - message.height * 2)
         });
         message.pos = vec(stripe.width / 2, stripe.height / 2);
@@ -286,19 +377,32 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
         showGameWonPanel(minutes > 0 ? `you won! (${minutes} minutes ${seconds} seconds)` : `you won! (${seconds} seconds)`);
     };
 
+    type UndoItem = { index: number, square: Square };
+    const undoStack: UndoItem[] = [];
+
     picker.on('picker:select', (num: any) => {
         if (num === 10) {
             pickerScope!.clearUserValue();
             runtimeUserState[puzzleIndexScope!] = -1;
         } else {
-            pickerScope!.setUserValue(num);
+            pickerScope!.setUserValue(num, currentPenColor);
             runtimeUserState[puzzleIndexScope!] = num;
+            undoStack.splice(0, undoStack.length, ...undoStack.filter(item => item.index !== puzzleIndexScope!));
+            undoStack.push({ index: puzzleIndexScope!, square: pickerScope! });
         }
         returnToBaseState();
-        if (arrayEq(useSolution, runtimeUserState)) {
+        if (arrayEq(useSolution, runtimeUserState)) { // win!
             const totalSeconds = Math.floor((Date.now() - enteredTime!) / 1000);
-            showWinnerModal(totalSeconds);
-            engine.emit('xelly:terminate', createTerminationResult(totalSeconds));
+            const proms: Promise<any>[] = [];
+            squares.forEach(sq => {
+                if (sq.fixedValue === undefined) {
+                    proms.push(sq.valueChild!.actions.blink(150, 150, 2).toPromise());
+                }
+            });
+            Promise.all(proms).then(() => {
+                showWinnerModal(totalSeconds);
+                engine.emit('xelly:terminate', createTerminationResult(totalSeconds));
+            });
         }
     });
 
@@ -368,8 +472,49 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
         for (let j = 0; j < 3; ++j) { // region y
             const subBoardOffsetX = boardOffsetX + i * (subBoardDim + 1);
             const subBoardOffsetY = boardOffsetY + j * (subBoardDim + 1);
+            const regionOutline = new Actor({
+                anchor: Vector.Zero,
+                x: xel.convert.toCssScale(context, subBoardOffsetX),
+                y: xel.convert.toCssScale(context, subBoardOffsetY)
+            });
+            regionOutline.graphics.use(new Rectangle({
+                width: xel.convert.toCssScale(context, 3 * (squareDim + 1)),
+                height: xel.convert.toCssScale(context, 3 * (squareDim + 1)),
+                lineWidth: 4,
+                color: Color.Transparent,
+                strokeColor: Color.LightGray
+            }));
+            engine.add(regionOutline);
             for (let k = 0; k < 3; ++k) { // inner x
+                if (k > 0) {
+                    const verticalLine = new Actor({
+                        anchor: Vector.Zero,
+                        x: xel.convert.toCssScale(context, subBoardOffsetX + k * (squareDim + 1)),
+                        y: xel.convert.toCssScale(context, subBoardOffsetY)
+                    });
+                    verticalLine.graphics.use(new Line({
+                        start: vec(0, 0),
+                        end: vec(0, xel.convert.toCssScale(context, 3 * (squareDim + 1))),
+                        thickness: 1,
+                        color: Color.LightGray
+                    }));
+                    engine.add(verticalLine);
+                }
                 for (let m = 0; m < 3; ++m) { // inner y
+                    if (k == 0 && m > 0) {
+                        const horizontalLine = new Actor({
+                            anchor: Vector.Zero,
+                            x: xel.convert.toCssScale(context, subBoardOffsetX),
+                            y: xel.convert.toCssScale(context, subBoardOffsetY + m * (squareDim + 1))
+                        });
+                        horizontalLine.graphics.use(new Line({
+                            start: vec(0, 0),
+                            end: vec(xel.convert.toCssScale(context, 3 * (squareDim + 1)), 0),
+                            thickness: 1,
+                            color: Color.LightGray
+                        }));
+                        engine.add(horizontalLine);
+                    }
                     const idx = (j * 3 + m) * 9 + i * 3 + k;
                     const square = new Square(context,
                         subBoardOffsetX + k * (squareDim + 1),
@@ -383,6 +528,7 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
                         returnToBaseState();
                     });
                     engine.add(square);
+                    squares[idx] = square;
                 }
             }
         }
@@ -392,6 +538,81 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
         if (userGameState) {
             showWinnerModal(userGameState.totalSeconds);
             engine.emit('xelly:terminate'); // !!! terminate WITHOUT state !!!
+        }
+    });
+
+    const editPenItselfTargetDim = 25;
+    const editPenMarginX = 10;
+    const editPenMarginY = 5;
+    const editPenPadding = 3;
+    const penImages = [
+        {image: editPenBlueImage, color: penColorBlue},
+        {image: editPenRedImage, color: penColorRed},
+        //{ image: editPenGreenImage, color: penColorGreen },
+        //{ image: editPenYellowImage, color: penColorYellow },
+        {image: editPenGrayImage, color: penColorGray},
+    ];
+    let allPenOuters: Actor[] = [];
+    Promise.all([
+        undoWhiteImageSource.load(),
+        undoImageSource.load(),
+        //editPenGreenImage.load(),
+        editPenRedImage.load(),
+        //editPenYellowImage.load(),
+        editPenBlueImage.load(),
+        editPenGrayImage.load()]).then(() => {
+        // -- undo
+        const undoButton = createUndoGraphicalButton(engine, undoImageSource, undoWhiteImageSource);
+        undoButton.on('press*', () => {
+            const popped = undoStack.pop();
+            if (popped) {
+                popped.square.clearUserValue();
+                runtimeUserState[popped.index] = -1;
+            }
+        });
+        engine.add(undoButton);
+        // -- pens
+        let yOffset = editPenMarginY;
+        for (let penImage of penImages) {
+            const penOuter = new Actor({
+                anchor: Vector.Zero,
+                pos: vec(engine.drawWidth - editPenMarginX - editPenItselfTargetDim - editPenPadding, yOffset),
+            });
+            penOuter.graphics.add('boxed*', createOpenRect(
+                editPenItselfTargetDim + 2 * editPenPadding,
+                editPenItselfTargetDim + 2 * editPenPadding,
+            ));
+            // we create default (transparent) rect too so we're clickable
+            penOuter.graphics.add(createOpenRect(
+                editPenItselfTargetDim + 2 * editPenPadding,
+                editPenItselfTargetDim + 2 * editPenPadding,
+                Color.Transparent
+            ));
+            if (penImage.color === currentPenColor) {
+                penOuter.graphics.use('boxed*');
+            } else {
+                penOuter.graphics.use('default');
+            }
+            const penItself = new Actor({
+                anchor: Vector.Zero,
+                pos: vec(editPenPadding, editPenPadding),
+                scale: vec(editPenItselfTargetDim / penImage.image.width,
+                    editPenItselfTargetDim / penImage.image.width),
+            });
+            penItself.graphics.use(penImage.image.toSprite());
+            penOuter.addChild(penItself);
+            penOuter.on('pointerdown', (e) => {
+                currentPenColor = penImage.color;
+                picker.updatePenColor(penImage.color);
+                for (let item of allPenOuters) {
+                    item.graphics.use('default');
+                }
+                penOuter.graphics.use('boxed*');
+                e.cancel();
+            });
+            allPenOuters.push(penOuter);
+            engine.add(penOuter);
+            yOffset += editPenItselfTargetDim + editPenMarginY + editPenPadding;
         }
     });
 };

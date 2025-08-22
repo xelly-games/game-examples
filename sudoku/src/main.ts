@@ -1,5 +1,6 @@
 import {Actor, EasingFunctions, Engine, vec, Vector,} from 'excalibur';
-import xel, {
+import * as xel from '@xelly/xelly.js';
+import {
     XellyContext,
     XellyGameType,
     XellyInstallFunction,
