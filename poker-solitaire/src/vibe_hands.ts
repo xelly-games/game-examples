@@ -69,7 +69,7 @@ export const pokerHandScores = new Map<PokerHand, number>([
 type EndingRule = { min: number; msg: string };
 
 const EndingRules: EndingRule[] = [
-    { min: 200, msg: "Wow. How'd you do that?" },
+    { min: 200, msg: "Wow. Just... Wow." },
     { min: 175, msg: "Stellar." },
     { min: 150, msg: "Now we are talking." },
     { min: 130, msg: "Pretty. Pretty. Good." },
