@@ -139,7 +139,7 @@ const font24 = new Font({
 
 const createLabel_xCentered = (text: string, font: Font, xCenter: number, yTop: number) => {
     return new Label({
-        // note: Label always renderse anchor = Zero
+        // note: Label always renders anchor = Zero
         pos: vec(xCenter - font.measureText(text).width / 2, yTop),
         font,
         text
@@ -148,7 +148,7 @@ const createLabel_xCentered = (text: string, font: Font, xCenter: number, yTop: 
 
 const createLabel_yCentered = (text: string, font: Font, x: number, yCenter: number) => {
     return new Label({
-        // note: Label always renderse anchor = Zero
+        // note: Label always renders anchor = Zero
         pos: vec(x, yCenter - font.measureText(text).height / 2),
         font,
         text
@@ -690,8 +690,6 @@ const createUndoButton = (engine: Engine) => {
     });
     return undoButton;
 };
-
-// --
 
 const createGameEndPane = (engine: Engine, message: string) => {
     //

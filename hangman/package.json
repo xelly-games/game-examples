@@ -8,7 +8,6 @@
     "build": "npm run clean && npm run build:rollup",
     "watch": "rollup -c --watch"
   },
-  "//": "re: file ref to xelly.js --> see rollup.config resolve.alias as well:",
   "files": [],
   "keywords": [],
   "author": "",

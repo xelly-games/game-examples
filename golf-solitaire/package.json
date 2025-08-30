@@ -1,5 +1,5 @@
 {
-  "name": "simple",
+  "name": "golf-solitaire",
   "version": "1.0.0",
   "scripts": {
     "clean": "rm -rf dist dist/tsconfig.tsbuildinfo && echo 'cleaned!'",

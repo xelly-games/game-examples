@@ -9,7 +9,6 @@
     "watch": "rollup -c --watch",
     "_generate": "ts-node src/_gen.ts"
   },
-  "//": "re: file ref to xelly.js --> see rollup.config resolve.alias as well:",
   "files": [],
   "keywords": [],
   "author": "",

@@ -14,7 +14,6 @@
   "author": "",
   "license": "ISC",
   "description": "",
-  "//": "re: file ref to xelly.js --> see rollup.config resolve.alias as well:",
   "dependencies": {
     "excalibur": "~0.30.3",
     "@xelly/xelly.js": "1.0.0"
