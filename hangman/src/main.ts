@@ -389,6 +389,18 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
     const [phraseWindowX, phraseWindowY] = computePhraseWindowOffset(context);
     const letterToPlaceholderActors = new Map<string, Actor[]>();
     const letterToAnswerActors = new Map<string, Actor[]>();
+
+    let deferred: {
+        promise: Promise<void>,
+        resolve: () => void,
+        reject: (error: any) => void
+    } = {} as any;
+    deferred.promise = new Promise((resolve, reject) => {
+        deferred.resolve = resolve;
+        deferred.reject = reject;
+    });
+    let blinkPromise = deferred.promise;
+    let blinkActors: Actor[] = [];
     for (let placement of layout) {
         const psw = /*xel.measure.width(placement.sprite)*/MaxLetterWidth;
         const psh = xel.measure.height(placement.sprite);
@@ -418,11 +430,24 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
             if (!letterToAnswerActors.has(placement.letter))
                 letterToAnswerActors.set(placement.letter, []);
             letterToAnswerActors.get(placement.letter)!.push(answerActor);
+            actor.graphics.isVisible = false;
+            blinkPromise = blinkPromise.then(() => {
+                actor.graphics.isVisible = true;
+                return new Promise(
+                    resolve => setTimeout(resolve, 50));
+            });
+            blinkActors.push(actor);
             engine.add(actor);
         } else {
             engine.add(answerActor);
         }
     }
+    blinkPromise.then(() => {
+        blinkActors.forEach(actor => {
+            actor.actions.blink(75, 50, 2);
+        });
+    });
+
     // --
 
     const gallowsBaseWidth = Math.round(context.screen.pixel.width * gallowsBaseWidthPercent);
@@ -503,6 +528,8 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
                 chooseLetter(ch);
             }
             engine.emit('xelly:terminate'); // !!! terminate WITHOUT state !!!
+        } else {
+            deferred.resolve();
         }
     });
 };

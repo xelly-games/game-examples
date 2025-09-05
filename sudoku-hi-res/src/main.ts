@@ -310,9 +310,9 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
     } else {
         // @see https://github.com/guanghechen/algorithm.ts/tree/@algorithm.ts/sudoku@4.0.2/packages/sudoku
         const creator = new SudokuCreator({childMatrixWidth: 3});
-        const easy = creator.createSudoku(0.3);
-        const puzzle = easy.puzzle.map(x => x < 0 ? x : x + 1);
-        const solution = easy.solution.map(x => x < 0 ? x : x + 1);
+        const medium = creator.createSudoku(0.6);
+        const puzzle = medium.puzzle.map(x => x < 0 ? x : x + 1);
+        const solution = medium.solution.map(x => x < 0 ? x : x + 1);
         usePuzzle = puzzle;
         useSolution = solution;
     }
