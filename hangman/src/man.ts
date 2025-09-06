@@ -29,6 +29,8 @@ export const HangmanWidth = xel.measure.width(legLeft) + xel.measure.width(legRi
 /** */
 export class HangmanActor extends XellySpriteActor {
 
+    private readonly hardMode: boolean;
+
     private readonly head: Actor;
     private readonly leye: Actor;
     private readonly reye: Actor;
@@ -39,8 +41,9 @@ export class HangmanActor extends XellySpriteActor {
     private readonly lleg: Actor;
     private readonly rleg: Actor;
 
-    constructor(context: XellyContext, baseArgs: ActorArgsSansColliderArgs) {
+    constructor(context: XellyContext, baseArgs: ActorArgsSansColliderArgs, hardMode: boolean = false) {
         super(baseArgs, context, [], {});
+        this.hardMode = hardMode;
         this.head = xel.actors.fromSprite(this.context, head, {},
             xel.actorArgs.fromPixelBasedArgs(this.context, {
                 anchor: Vector.Zero,
@@ -105,15 +108,21 @@ export class HangmanActor extends XellySpriteActor {
         this.addChild(this.torso);
         yield false;
         this.addChild(this.larm);
-        yield false;
+        if (!this.hardMode) {
+            yield false;
+        }
         this.addChild(this.rarm);
         yield false;
         this.addChild(this.lleg);
-        yield false;
+        if (!this.hardMode) {
+            yield false;
+        }
         this.addChild(this.rleg);
         yield false;
         this.addChild(this.leye);
-        yield false;
+        if (!this.hardMode) {
+            yield false;
+        }
         this.addChild(this.reye);
         yield false;
         this.addChild(this.mouth);

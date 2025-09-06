@@ -370,6 +370,11 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
         || words[Math.floor(Math.random() * words.length)].toUpperCase();
     const userGameState = readGameStateFromContextParameters(context);
     const suppressAnimations = userGameState !== undefined;
+
+    // if phrase has spaces, then we are in hard mode -- i.e., we won't give
+    //   user as many guesses as normal.
+    const hardMode = phrase.includes(' ');
+
     // --
     const gallows = makeGallows(context);
     engine.add(xel.actors.fromSprite(context, gallows, {},
@@ -479,7 +484,7 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
         anchor: Vector.Zero,
         x: gallowsDropXOffset - HangmanWidth / 2,
         y: gallowsOffsetY + Math.round(gallowsHeight * gallowsDropPercentOfHeight)
-    }));
+    }), hardMode);
     engine.add(hangman);
     const addNextBodyPart = hangman.cycle();
 
@@ -503,7 +508,7 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
                 engine.emit('xelly:terminate', toTerminationResult(Array.from(usedLettersSet)));
             }
         } else {
-            if (addNextBodyPart.next().value) {
+            if (addNextBodyPart.next().value) { // true when no more guesses
                 for (const [key, val] of letterToPlaceholderActors.entries()) {
                     for (let spot of val) {
                         engine.remove(spot);
