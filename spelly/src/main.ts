@@ -2,8 +2,7 @@ import {
     XellyContext,
     XellyGameType,
     XellyInstallFunction,
-    XellyMetadata,
-    XellyPixelScheme
+    XellyMetadata
 } from '@xelly/xelly.js';
 import {
     Actor,

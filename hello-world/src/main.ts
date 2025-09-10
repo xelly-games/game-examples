@@ -1,4 +1,3 @@
-import * as xel from '@xelly/xelly.js';
 import {
     XellyContext,
     XellyGameType,
