@@ -131,7 +131,7 @@ const createDeck = () => {
 // --
 
 const boardMarginTop = 12;
-const stackMargin = 8;
+const defaultCardXMargin = 8;
 const stackedCardOffset = 25;
 
 const deckMarginRight = 20;
@@ -150,14 +150,16 @@ class Board extends Actor {
 
     _bounds: BoundingBox;
     refs: BoardCardRef[][] = Array.from({length: 7}, () => []);
+    private readonly cardXMargin: number;
 
-    constructor(config: ActorArgs, sheet: SpriteSheet, deck: Card[]) {
+    constructor(config: ActorArgs, sheet: SpriteSheet, deck: Card[], cardXMargin: number = defaultCardXMargin) {
         super(config);
+        this.cardXMargin = cardXMargin;
         const sampleCardSprite = getSpriteForCard(sheet, deck[0]);
         for (let col = 0; col < 7; col++) {
             for (let row = 0; row < 5; row++) {
                 const card = new Actor({
-                    pos: Board.determineCardPosForRowCol(sampleCardSprite, row, col),
+                    pos: this.determineCardPosForRowCol(sampleCardSprite, row, col),
                     anchor: Vector.Zero,
                     z: (row + 1) * 10
                 });
@@ -179,13 +181,13 @@ class Board extends Actor {
         this._bounds = new BoundingBox({
             top: 0,
             left: 0,
-            right: 7 * (stackMargin + sampleCardSprite.width) - stackMargin,
+            right: 7 * (this.cardXMargin + sampleCardSprite.width) - this.cardXMargin,
             bottom: 4 * stackedCardOffset + sampleCardSprite.height
         });
     }
 
-    static determineCardPosForRowCol(sampleCardSprite: Graphic, row: number, col: number) {
-        return vec(col * (stackMargin + sampleCardSprite.width), row * stackedCardOffset);
+    determineCardPosForRowCol(sampleCardSprite: Graphic, row: number, col: number) {
+        return vec(col * (this.cardXMargin + sampleCardSprite.width), row * stackedCardOffset);
     }
 
     pop(ref: BoardCardRef) {
@@ -209,7 +211,7 @@ class Board extends Actor {
 
     placePreviouslyPoppedCard(ref: BoardCardRef) {
         this.refs[ref.col].push(ref);
-        ref.actor.pos = Board.determineCardPosForRowCol(ref.actor.graphics.current!, ref.row, ref.col);
+        ref.actor.pos = this.determineCardPosForRowCol(ref.actor.graphics.current!, ref.row, ref.col);
         // re-add previously-killed actor, which we'll expect still has it's
         // click handler, z-order, etc.
         this.addChild(ref.actor);
@@ -483,9 +485,13 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
     loadImgResources().then(() => {
         const sheet = createSpriteSheet();
 
+        const templateSprite = getSpriteForCard(sheet, deck[0]);
+        const cardXMargin = Math.max(1, Math.min(defaultCardXMargin,
+            Math.floor((engine.drawWidth - 4/*i.e., minimal outer margin*/ - 7 * templateSprite.width) / 6)));
+
         const board = new Board({
             anchor: Vector.Zero
-        }, sheet, deck);
+        }, sheet, deck, cardXMargin);
         board.pos.x = (engine.drawWidth - board._bounds.width) / 2;
         board.pos.y = boardMarginTop;
         engine.add(board);
@@ -542,7 +548,7 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
                 if ('pick' in popped) {
                     const {pick} = popped;
                     const boardPos =
-                        Board.determineCardPosForRowCol(pick.actor.graphics.current!, pick.row, pick.col);
+                        board.determineCardPosForRowCol(pick.actor.graphics.current!, pick.row, pick.col);
                     const globalPos = boardPos.add(board.pos);
                     // restore picked actor and initially position over visibleCard...
                     pick.actor.pos = deckActor.visibleCard.pos.add(deckActor.pos);

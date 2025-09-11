@@ -15,7 +15,8 @@ import {
     CollisionStartEvent,
     Engine,
     GlobalCoordinates,
-    Handler, ParallelActions,
+    Handler,
+    ParallelActions,
     Timer,
     vec,
     Vector
