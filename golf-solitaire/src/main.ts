@@ -130,7 +130,7 @@ const createDeck = () => {
 
 // --
 
-const boardMarginTop = 12;
+const defaultBoardMarginTop = 12;
 const defaultCardXMargin = 8;
 const stackedCardOffset = 25;
 
@@ -492,8 +492,8 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
         const board = new Board({
             anchor: Vector.Zero
         }, sheet, deck, cardXMargin);
-        board.pos.x = (engine.drawWidth - board._bounds.width) / 2;
-        board.pos.y = boardMarginTop;
+        board.pos.x = Math.floor((engine.drawWidth - board._bounds.width) / 2);
+        board.pos.y = defaultBoardMarginTop;
         engine.add(board);
 
         nextDeckCardIndex += 7 * 5;
@@ -504,6 +504,13 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
         const deckActor = new Deck({
             anchor: Vector.Zero
         }, sheet, getSpriteForCard(sheet, initialTopCard));
+
+        if (deckActor._bounds.height + board._bounds.height + defaultBoardMarginTop + 8/*fudge*/
+            > engine.drawHeight) {
+            // responsive move if height is too limited, and note we do this
+            //   *before* we position the deck.
+            board.pos.y = 2;
+        }
         deckActor.pos.x = Math.floor((engine.drawWidth - deckActor._bounds.width) / 2);
         deckActor.pos.y = Math.ceil((engine.drawHeight - board.pos.y - board._bounds.height - deckActor._bounds.height) / 2 + board.pos.y + board._bounds.height);
         engine.add(deckActor);
