@@ -23,7 +23,7 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
     const message = "Hello, world!";
     const messageDimensions = font24.measureText(message);
     engine.add(new Label({
-        text: "Hello, world!",
+        text: message,
         font: font24,
         pos: vec(
             (engine.drawWidth - messageDimensions.width) / 2,
