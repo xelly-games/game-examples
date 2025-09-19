@@ -24,7 +24,7 @@ import {
     Vector
 } from 'excalibur';
 import { Progress } from './Progress';
-import bottle from './bottle_1_1_2.png';
+import bottle from './bottle.png';
 
 const bottleImage = new ImageSource(bottle);
 

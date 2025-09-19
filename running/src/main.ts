@@ -21,8 +21,7 @@ import playerRun from './player-run.png';
 
 /** Metadata. */
 export const metadata: XellyMetadata = {
-    type: XellyGameType.Interactive,
-    pixelScheme: XellyPixelScheme.Px2_0
+    type: XellyGameType.Interactive
 };
 
 const runImage = new ImageSource(playerRun);

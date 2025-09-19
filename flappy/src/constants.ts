@@ -1,6 +1,10 @@
+import {XellyPixelScheme} from '@xelly/xelly.js';
+
 export const Config = {
     PipeIntervalMs: 2000,
-    PipeSpeed: 200, // regular pixels per second
+    PipeSpeed: 200,
     BirdAcceleration: 1200,
-    PipeGap: 30, // xelly pixels!
+    PipeGap: 90
 } as const;
+
+export const GamePixelScheme = XellyPixelScheme.Px3_0;

@@ -4,8 +4,7 @@ import {
     XellyContext,
     XellyGameType,
     XellyInstallFunction,
-    XellyMetadata,
-    XellyPixelScheme
+    XellyMetadata
 } from '@xelly/xelly.js';
 import {
     ActionSequence,
@@ -16,6 +15,7 @@ import {
     Engine,
     GlobalCoordinates,
     Handler,
+    Line,
     ParallelActions,
     Timer,
     vec,
@@ -25,13 +25,12 @@ import {Score} from './score';
 
 /** Metadata. */
 export const metadata: XellyMetadata = {
-    type: XellyGameType.Realtime,
-    pixelScheme: XellyPixelScheme.Px3_0
+    type: XellyGameType.Realtime
 };
 
-const GroundMarginCssPixels = 15;
-const FallingLettersMarginScreenPixelsX = 10;
-const InitialFallingPixelVelocity = 40;
+const GroundMarginPixels = 15;
+const FallingLettersMarginX = 10;
+const InitialFallingVelocity = 120;
 
 /** Install. */
 export const install: XellyInstallFunction = (context: XellyContext, engine: Engine) => {
@@ -41,34 +40,41 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
     });
     engine.add(keyboard);
 
-    const tapToStart = xel.actors.fromText(context,
-        'tap to start',
-        {
-            bgAlpha: 1,
-            spritePadding: vec(20, 10),
-            borderWidth: 1,
-            positioning: {
-                anchor: Vector.Half,
-                fractionalOffset: Vector.Half
-            }
-        },
-        xel.actorArgs.fromPixelBasedArgs(context,
-            {
-                pos: vec(context.screen.pixel.width / 2, context.screen.pixel.height / 3),
-                z: 100,
-            }));
-    engine.add(tapToStart);
+    const tapToStart = new Actor({
+        pos: vec(Math.floor(engine.drawWidth / 2),
+            Math.floor(engine.drawHeight / 2)),
+        z: 100,
+    });
+    tapToStart.graphics.use(xel.graphics.fromSpriteArray(
+        xel.create.label('tap to start'), {
+            color: context.color.fg,
+            borderWidth: 8,
+            borderRadius: 1,
+            borderColor: context.color.fg,
+            cssWidthAndHeightOverride: cssWidthAndHeight =>
+                vec(cssWidthAndHeight.x + 60, cssWidthAndHeight.y + 60)
+        }));
 
     keyboard.on('initialize', () => {
-        const ground = xel.actors.fromSprite(context,
-            xel.create.line(0, 0, context.screen.pixel.width, 0),
-            {},
-            {
-                name: 'ground',
-                anchor: Vector.Zero,
-                pos: vec(0, keyboard.pos.y - GroundMarginCssPixels)
-            });
+        const line = new Line({
+            color: context.color.fg,
+            thickness: 3,
+            start: vec(0, 0),
+            end: vec(engine.drawWidth, 0)
+        });
+        const ground = new Actor({
+            name: 'ground', // used by collision detection
+            anchor: Vector.Zero,
+            pos: vec(0, keyboard.pos.y - GroundMarginPixels),
+            width: line.width,
+            height: line.height,
+        });
+        ground.graphics.use(line);
         engine.add(ground);
+
+        tapToStart.pos = vec(Math.floor(engine.drawWidth / 2),
+            Math.floor(ground.pos.y / 2));
+        engine.add(tapToStart);
     });
 
     const liveLettersMap = new Map<string, Actor[]>();
@@ -94,33 +100,38 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
         strategy: AnimationStrategy.End,
         frames: [
             {
-                graphic: xel.graphics.fromSprite(context, [[0, 0], [0, 3], [1, 1], [1, 4], [2, 1], [2, 3]]),
+                graphic: xel.graphics.fromSpriteArray([[0, 0], [0, 3], [1, 1], [1, 4], [2, 1], [2, 3]]),
                 duration: 30
             },
             {
-                graphic: xel.graphics.fromSprite(context, [[0, 0], [0, 4], [1, 1], [1, 5], [3, 1], [3, 3]]),
+                graphic: xel.graphics.fromSpriteArray([[0, 0], [0, 4], [1, 1], [1, 5], [3, 1], [3, 3]]),
                 duration: 30
             }
         ]
     });
 
-    const score = new Score(context);
+    const score = new Score(engine, context.color.fg);
     score.addOrReplaceScoreGraphic(0);
     engine.add(score);
 
-    let currentFallingVelocity = InitialFallingPixelVelocity;
+    let currentFallingVelocity = InitialFallingVelocity;
 
     engine.on('xelly:enter', ((coords: GlobalCoordinates) => {
         tapToStart.kill();
         const timer = new Timer({
             action: () => {
                 const newLetter = String.fromCharCode(65 + Math.floor(Math.random() * 26))/*A-Z*/;
-                const newLetterActor = xel.actors.fromText(context,
-                    newLetter, {},
-                    xel.actorArgs.fromPixelBasedArgs(context, {
-                        pos: vec(Math.random() * (context.screen.pixel.width - FallingLettersMarginScreenPixelsX * 2 + 1) + FallingLettersMarginScreenPixelsX, 0),
-                        vel: vec(0, currentFallingVelocity)
-                    }));
+                const newLetterGraphic
+                    = xel.graphics.fromSpriteArray(xel.create.label(newLetter),
+                    { color: context.color.fg });
+                const newLetterActor = new Actor({
+                    pos: vec(Math.random() * (engine.drawWidth - FallingLettersMarginX * 2 + 1)
+                        + FallingLettersMarginX, 0),
+                    vel: vec(0, currentFallingVelocity),
+                    width: newLetterGraphic.width,
+                    height: newLetterGraphic.height,
+                });
+                newLetterActor.graphics.use(newLetterGraphic);
                 pushLiveLetter(newLetter, newLetterActor);
                 newLetterActor.on('collisionstart', (e: CollisionStartEvent) => {
                     if (e.other.owner.name !== 'ground') {
@@ -133,27 +144,31 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
                         }
                         liveLettersMap.delete(key);
                     }
+                    const scale = 2.5;
                     // https://github.com/excaliburjs/Excalibur/discussions/2327#discussioncomment-2860453
                     const scaleSequence = new ActionSequence(score, ctx => {
                         ctx.scaleTo({
-                            scale: vec(2, 2),
+                            scale: vec(scale, scale),
                             duration: 200
                         });
                     });
                     const moveSequence = new ActionSequence(score, ctx => {
                         ctx.moveTo({
-                            pos: vec(context.screen.css.width / 2 + score.graphics.localBounds.width,
-                                context.screen.css.height / 4),
+                            pos: vec(Math.floor(engine.drawWidth / 2)
+                                + Math.floor(score.graphics.current!.width * scale / 2),
+                                tapToStart.pos.y),
                             duration: 200
                         });
                     });
                     const parallel = new ParallelActions([scaleSequence, moveSequence]);
                     score.actions.runAction(parallel).toPromise().then(() => {
-                        const skull = xel.actors.fromSprite(context, xel.gallery.SkullSprite, {}, {
-                            pos: vec(context.screen.css.width / 2,
-                                score.pos.y - score.graphics.localBounds.height),
+                        const skull = new Actor({
+                            pos: vec(engine.drawWidth / 2,
+                                score.pos.y - score.graphics.current!.height - 5),
                             scale: vec(2, 2)
                         });
+                        skull.graphics.use(xel.graphics.fromSpriteArray(xel.gallery.SkullSprite,
+                            {color: context.color.fg}));
                         skull.actions.blink(150, 150, 2);
                         engine.add(skull);
                         engine.emit('xelly:terminate'); // !!!

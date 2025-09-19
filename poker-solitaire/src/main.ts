@@ -390,7 +390,7 @@ class Deck extends Actor {
         top.actions.moveTo({
             pos: vec(this.faceUpActor.pos.x + deckFaceUpCardMargin,
                 this.faceUpActor.pos.y + deckFaceUpCardMargin),
-            duration: 150
+            duration: 151
         }).toPromise().then(() => {
             this.topFannedCards.unshift(this.topFannedCards.pop()!);
             const localStackedStartOffsetX = numDeckStackedCards * deckCardStackedOffset;
@@ -399,7 +399,7 @@ class Deck extends Actor {
                 this.topFannedCards[i].z = i;
                 this.topFannedCards[i].actions.moveTo({
                     pos: vec(localStackedStartOffsetX + i * Math.round(newFaceUpSprite.width * 0.25), deckFaceUpCardMargin/*!*/),
-                    duration: 150
+                    duration: 151
                 });
             }
             this.faceUpInnerActor.graphics.use(newFaceUpSprite);

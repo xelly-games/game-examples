@@ -1,18 +1,20 @@
-import {XellyContext, XellySpriteActor} from '@xelly/xelly.js';
 import * as xel from '@xelly/xelly.js';
 import {
+    Actor,
     Animation,
     AnimationStrategy,
     clamp,
     Collider,
+    ColliderComponent,
     CollisionType,
+    Color,
     Engine,
     vec,
     Vector
 } from 'excalibur';
 import {Ground} from './ground';
 import {Pipe} from './pipe';
-import {Config} from './constants';
+import {Config, GamePixelScheme} from './constants';
 
 const flappyBirdHeadSprite: [number, number][] = [
     [3, 1], [3, 2], [3, 3],
@@ -67,16 +69,25 @@ const flappyBirdWingUpSprite2: [number, number][] = flappyBirdHeadClosedMouthSpr
 ]);
 
 /** DeadBirdHead. */
-export class DeadBirdHead extends XellySpriteActor {
+export class DeadBirdHead extends Actor {
 
-    constructor(context: XellyContext, cssPos: Vector) {
+    constructor(color: Color, cssPos: Vector) {
         super({
             name: 'dead-bird-head',
             pos: cssPos,
             vel: vec(Config.PipeSpeed * 0.8, 0), // *
             acc: vec(0, Config.BirdAcceleration),
-            angularVelocity: 5
-        }, context, flappyBirdHeadSprite);
+            angularVelocity: 5,
+            z: 2
+        });
+        const graphic
+            = xel.graphics.fromSpriteArray(flappyBirdHeadSprite,
+            {pixelScheme: GamePixelScheme, color});
+        const collider
+            = xel.colliders.generate(GamePixelScheme, flappyBirdHeadSprite);
+        this.collider = new ColliderComponent(collider!);
+        this.addComponent(this.collider, true);
+        this.graphics.use(graphic);
         this.body.collisionType = CollisionType.Passive;
     }
 
@@ -93,20 +104,24 @@ export class DeadBirdHead extends XellySpriteActor {
 }
 
 /** DeadBirdBody. */
-export class DeadBirdBody extends XellySpriteActor {
+export class DeadBirdBody extends Actor {
 
-    constructor(context: XellyContext, cssPos: Vector) {
+    constructor(color: Color, cssPos: Vector) {
         super({
-                name: 'dead-bird-body',
-                pos: cssPos,
-                acc: vec(0, Config.BirdAcceleration),
-                angularVelocity: -5,
-                ...xel.actorArgs.fromPixelBasedArgs(context, {
-                    // we have the option to reason about properties in
-                    // "xelly pixels", too:
-                    vel: vec(-5, 0),
-                })
-            }, context, flappyBirdBodySprite, {generatePolygonCollider: true});
+            name: 'dead-bird-body',
+            pos: cssPos,
+            acc: vec(0, Config.BirdAcceleration),
+            angularVelocity: -5,
+            vel: vec(-15, 0)
+        });
+        const graphic
+            = xel.graphics.fromSpriteArray(flappyBirdBodySprite,
+            {pixelScheme: GamePixelScheme, color});
+        const collider
+            = xel.colliders.generate(GamePixelScheme, flappyBirdBodySprite);
+        this.collider = new ColliderComponent(collider!);
+        this.addComponent(this.collider, true);
+        this.graphics.use(graphic);
         this.body.collisionType = CollisionType.Passive;
     }
 
@@ -116,26 +131,34 @@ export class DeadBirdBody extends XellySpriteActor {
             this.acc = Vector.Zero;
             this.angularVelocity = 0;
         } else if (other.owner instanceof Pipe) {
-            this.vel = vec(xel.convert.toCssRate(this.context, -25), 0);
+            this.vel = vec(-75, 0);
         }
     }
 
 }
 
 /** Bird. */
-export class Bird extends XellySpriteActor {
+export class Bird extends Actor {
 
     private upAnimation!: Animation;
     private downAnimation!: Animation;
 
-    constructor(context: XellyContext) {
-        super(xel.actorArgs.fromPixelBasedArgs(context, {
-                name: 'bird',
-                pos: vec(context.screen.pixel.width / 2, context.screen.pixel.height / 2)
-            }),
-            context,
-            flappyBirdSprite,
-            {generatePolygonCollider: true});
+    constructor(color: Color, engine: Engine) {
+        super({
+            name: 'bird',
+            pos: vec(
+                Math.floor(engine.drawWidth / 2),
+                Math.floor(engine.drawHeight / 2))
+        });
+        const graphic
+            = xel.graphics.fromSpriteArray(flappyBirdSprite,
+            {pixelScheme: GamePixelScheme, color});
+        const collider
+            = xel.colliders.generate(GamePixelScheme, flappyBirdSprite);
+        this.collider = new ColliderComponent(collider!);
+        this.addComponent(this.collider, true);
+        this.graphics.use(graphic);
+        this.color = color;
     }
 
     override onInitialize(): void {
@@ -143,11 +166,13 @@ export class Bird extends XellySpriteActor {
             strategy: AnimationStrategy.Loop,
             frames: [
                 {
-                    graphic: xel.graphics.fromSprite(this.context, flappyBirdWingUpSprite2),
+                    graphic: xel.graphics.fromSpriteArray(flappyBirdWingUpSprite2,
+                        {color: this.color}),
                     duration: 30
                 },
                 {
-                    graphic: xel.graphics.fromSprite(this.context, flappyBirdWingUpSprite1),
+                    graphic: xel.graphics.fromSpriteArray(flappyBirdWingUpSprite1,
+                        {color: this.color}),
                     duration: 30
                 }
             ]
@@ -156,15 +181,18 @@ export class Bird extends XellySpriteActor {
             strategy: AnimationStrategy.Freeze,
             frames: [
                 {
-                    graphic: xel.graphics.fromSprite(this.context, flappyBirdWingUpSprite1),
+                    graphic: xel.graphics.fromSpriteArray(flappyBirdWingUpSprite1,
+                        {color: this.color}),
                     duration: 75
                 },
                 {
-                    graphic: xel.graphics.fromSprite(this.context, flappyBirdWingUpSprite2),
+                    graphic: xel.graphics.fromSpriteArray(flappyBirdWingUpSprite2,
+                        {color: this.color}),
                     duration: 75
                 },
                 {
-                    graphic: xel.graphics.fromSprite(this.context, flappyBirdSprite),
+                    graphic: xel.graphics.fromSpriteArray(flappyBirdSprite,
+                        {color: this.color}),
                     duration: 75
                 }
             ]

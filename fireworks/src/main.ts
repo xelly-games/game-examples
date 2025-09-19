@@ -10,8 +10,7 @@ import {MyLevel} from './level';
 
 /** Metadata. */
 export const metadata: XellyMetadata = {
-    type: XellyGameType.Interactive,
-    pixelScheme: XellyPixelScheme.Px2_0
+    type: XellyGameType.Interactive
 };
 
 /** Install. */

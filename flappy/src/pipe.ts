@@ -1,29 +1,51 @@
-import {CollisionType, vec, Vector} from 'excalibur';
-import {XellyContext, XellySpriteActor} from '@xelly/xelly.js';
-import * as xel from '@xelly/xelly.js';
+import {
+    Actor,
+    CollisionType,
+    Color,
+    Engine,
+    GraphicsGroup,
+    Rectangle,
+    vec,
+    Vector
+} from 'excalibur';
 import {Config} from './constants';
 
-export class Pipe extends XellySpriteActor {
-    constructor(context: XellyContext, pixelPos: Vector, public type: 'top' | 'bottom') {
-        const width = Math.round(context.screen.pixel.width * 0.1);
-        const sprite: [number, number][] = [];
-        if (type === 'bottom') {
-            sprite.push(...xel.create.line(0, 0, width, 0)
-                .concat(xel.create.line(width, 0, width, 3))
-                .concat(xel.create.line(width, 3, 0, 3))
-                .concat(xel.create.line(0, 3, 0, 0))
-                .concat(xel.create.line(1, 3, 1, context.screen.pixel.height))
-                .concat(xel.create.line(width - 1, 3, width - 1, context.screen.pixel.height))
-                .concat(xel.create.line(1, context.screen.pixel.height, width - 1, context.screen.pixel.height)));
-        } else {
-            sprite.push(...xel.create.line(0, context.screen.pixel.height, width, context.screen.pixel.height)
-                .concat(xel.create.line(width, context.screen.pixel.height, width, context.screen.pixel.height - 3))
-                .concat(xel.create.line(width, context.screen.pixel.height - 3, 0, context.screen.pixel.height - 3))
-                .concat(xel.create.line(0, context.screen.pixel.height - 3, 0, context.screen.pixel.height))
-                .concat(xel.create.line(1, context.screen.pixel.height - 3, 1, 0))
-                .concat(xel.create.line(1, 0, width - 1, 0))
-                .concat(xel.create.line(width - 1, 0, width - 1, context.screen.pixel.height - 3)));
-        }
+const PipeLineWidth = 6;
+const PipeRimHeight = 14;
+const PipeRimOverhang = 3;
+
+export class Pipe extends Actor {
+    constructor(engine: Engine, color: Color, pos: Vector, public type: 'top' | 'bottom') {
+        const width = Math.round(engine.drawWidth * 0.12);
+        const part = new Rectangle({
+            quality: 4,
+            width: width - PipeRimOverhang * 2,
+            height: engine.drawHeight,
+            lineWidth: PipeLineWidth,
+            strokeColor: color,
+            color: Color.White
+        });
+        const rim = new Rectangle({
+            quality: 4,
+            width: width,
+            height: PipeRimHeight,
+            lineWidth: PipeLineWidth,
+            strokeColor: color,
+            color: Color.White
+        });
+        const graphic = new GraphicsGroup({
+            useAnchor: true,
+            members: [
+                {
+                    graphic: part,
+                    offset: vec(PipeRimOverhang, PipeRimHeight - PipeLineWidth)
+                },
+                {
+                    graphic: rim,
+                    offset: vec(0, 0)
+                }
+            ]
+        });
         super({
             name: 'pipe',
             anchor: type === 'bottom' ?
@@ -31,10 +53,15 @@ export class Pipe extends XellySpriteActor {
                 Vector.Down, // top anchor from the bottom left
             vel: vec(-Config.PipeSpeed, 0),
             z: -1,
-            ...xel.actorArgs.fromPixelBasedArgs(context, {
-                pos: pixelPos
-            })
-        }, context, sprite);
+            pos,
+            // setting w + h gives us a Box collider:
+            width: graphic.width,
+            height: graphic.height
+        });
+        if (type === 'top') {
+            graphic.flipVertical = true;
+        }
+        this.graphics.use(graphic);
         this.body.collisionType = CollisionType.Fixed;
         this.on('exitviewport', () => this.kill());
     }

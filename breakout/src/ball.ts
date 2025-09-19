@@ -1,8 +1,10 @@
-import {XellyContext, XellySpriteActor} from '@xelly/xelly.js';
 import * as xel from '@xelly/xelly.js';
-import {Config} from './constants';
+import {XellyContext} from '@xelly/xelly.js';
+import {Config, GamePixelScheme} from './constants';
 import {
+    Actor,
     Collider,
+    ColliderComponent,
     CollisionContact,
     CollisionType,
     Engine,
@@ -12,7 +14,7 @@ import {
     Vector
 } from 'excalibur';
 
-export class Ball extends XellySpriteActor {
+export class Ball extends Actor {
 
     ballSpeed: Vector;
     colliding: boolean;
@@ -20,16 +22,19 @@ export class Ball extends XellySpriteActor {
     private numBricksAlive;
     private dead = false;
 
-    constructor(context: XellyContext, bricks: Entity[]) {
+    constructor(context: XellyContext, engine: Engine, bricks: Entity[]) {
+        super({
+            angularVelocity: Config.BallAngularVelocity,
+            pos: vec(engine.drawWidth / 2, engine.drawHeight / 2),
+        });
         const sprite = xel.create.circle(0, 0, Config.BallRadius_xelly);
-        super(xel.actorArgs.fromPixelBasedArgs(context, {
-                name: 'ball',
-                pos: vec(context.screen.pixel.width / 2, context.screen.pixel.height / 2),
-                angularVelocity: Config.BallAngularVelocity,
-                //radius: Config.BallRadius_xelly, // makes us a collider todo in lieu of generateCollider but type issues
-            }), context,
-            sprite,
-            {generatePolygonCollider: true});
+        this.graphics.use(
+            xel.graphics.fromSpriteArray(sprite, {
+                color: context.color.fg,
+                pixelScheme: GamePixelScheme}));
+        this.collider = new ColliderComponent(xel.colliders.generate(GamePixelScheme, sprite)!);
+        this.addComponent(this.collider, true);
+
         this.ballSpeed = Config.BallSpeed;
         this.colliding = false;
         this.body.collisionType = CollisionType.Passive;

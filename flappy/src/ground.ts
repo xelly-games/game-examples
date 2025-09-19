@@ -1,29 +1,55 @@
-import {XellyContext, XellySpriteActor} from '@xelly/xelly.js';
-import * as xel from '@xelly/xelly.js';
 import {Config} from './constants';
-import {CollisionType, Engine, Vector} from 'excalibur';
+import {
+    Actor,
+    CollisionType,
+    Color,
+    Engine,
+    Rectangle,
+    Vector
+} from 'excalibur';
 
-export class Ground extends XellySpriteActor {
+const GroundLineWidth = 9;
+
+export class Ground extends Actor {
+
     moving = false;
+    private readonly restartPos: number;
 
-    constructor(context: XellyContext) {
-        const height = Math.ceil(context.screen.pixel.height * 0.1);
-        const lineSprite = xel.create.line(0, 0, context.screen.pixel.width * 2/*!!*/, 0)
-            .filter((_, index) => index % 5 !== 0);
-        super(xel.actorArgs.fromPixelBasedArgs(context, {
-                y: context.screen.pixel.height - height,
-                anchor: Vector.Zero,
-                z: 1 // position the ground above everything
-            }),
-            context, lineSprite,
-            {spritePadding: height / 2, bgAlpha: 1/*so we mask pipes etc underneath*/});
+    constructor(color: Color, engine: Engine) {
+        const height = engine.drawHeight * 0.13;
+        const useWidth = (engine.drawWidth + GroundLineWidth) * 2;
+        const lineDash = [16, 8];
+        super({
+            x: - GroundLineWidth,
+            y: engine.drawHeight - height + GroundLineWidth,
+            anchor: Vector.Zero,
+            z: 1, // position the ground above everything
+            // by providing width and height here we get a (Box) collider
+            width: useWidth,
+            height: height,
+        });
+        const graphic = new Rectangle({
+            quality: 4,
+            width: useWidth,
+            height: height,
+            lineWidth: GroundLineWidth,
+            strokeColor: color,
+            color: Color.White/*hide what's underneath*/,
+            lineDash: lineDash
+        });
+        this.graphics.use(graphic);
         this.body.collisionType = CollisionType.Fixed;
+        this.restartPos =
+            (Math.floor(
+                (Math.floor(useWidth / 2) - (lineDash[0] + lineDash[1]))
+                / (lineDash[0] + lineDash[1])) + 1)
+            * (lineDash[0] + lineDash[1]);
     }
 
     override onPostUpdate(engine: Engine, elapsed: number) {
         if (this.moving) {
             this.pos.x -= (elapsed / 1000) * Config.PipeSpeed;
-            if (this.pos.x < -engine.drawWidth) {
+            if (this.pos.x < - this.restartPos) {
                 this.pos.x = 0;
             }
         }

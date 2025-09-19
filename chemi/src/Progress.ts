@@ -4,9 +4,6 @@ export interface ProgressOptions {
     width: number;
 }
 
-/**
- * A Rectangle {@apilink Graphic} for drawing rectangles to the {@apilink ExcaliburGraphicsContext}
- */
 export class Progress extends Raster {
     constructor(options: RasterOptions & ProgressOptions) {
         super(options);

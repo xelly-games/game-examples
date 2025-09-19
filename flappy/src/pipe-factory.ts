@@ -1,5 +1,4 @@
-import {Random, Scene, Timer, vec} from 'excalibur';
-import {XellyContext} from '@xelly/xelly.js';
+import {Color, Engine, Random, Scene, Timer, vec} from 'excalibur';
 import {Pipe} from './pipe';
 import {Config} from './constants';
 import {ScoreTrigger} from './score-trigger';
@@ -8,35 +7,34 @@ export class PipeFactory {
     private timer: Timer;
 
     constructor(
-        private context: XellyContext,
+        private engine: Engine,
+        private color: Color,
         private level: Scene,
         private random: Random) {
         this.timer = new Timer({
             interval: Config.PipeIntervalMs,
             repeats: true,
-            action: () => this.spawnPipes(context)
+            action: () => this.spawnPipes()
         });
         this.level.add(this.timer);
     }
 
-    spawnPipes(context: XellyContext) {
+    spawnPipes() {
         const randomPipePosition
-            = this.random.integer(0, context.screen.pixel.height - Config.PipeGap);
-        const bottomPipe = new Pipe(
-            this.context,
-            vec(context.screen.pixel.width, randomPipePosition + Config.PipeGap),
+            = this.random.integer(0, this.engine.drawHeight - Config.PipeGap);
+        const bottomPipe = new Pipe(this.engine, this.color,
+            vec(this.engine.drawWidth, randomPipePosition + Config.PipeGap),
             'bottom');
         this.level.add(bottomPipe);
-        const topPipe = new Pipe(
-            this.context,
-            vec(context.screen.pixel.width, randomPipePosition),
+        const topPipe = new Pipe(this.engine, this.color,
+            vec(this.engine.drawWidth, randomPipePosition),
             'top');
         this.level.add(topPipe);
         const scoreTrigger = new ScoreTrigger(
-            context,
-            vec(context.screen.pixel.width, randomPipePosition),
-            topPipe.width);
-        scoreTrigger.once('score:tally', () => this.level.emit('score:tally'));
+            vec(this.engine.drawWidth + topPipe.width, randomPipePosition),
+            5/*arbitrary*/);
+        scoreTrigger.once('score:tally',
+            () => this.level.emit('score:tally'));
         this.level.add(scoreTrigger);
     }
 

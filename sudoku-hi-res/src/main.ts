@@ -5,7 +5,8 @@ import {
     Font,
     FontUnit,
     ImageSource,
-    Label, Line,
+    Label,
+    Line,
     Rectangle,
     vec,
     Vector
@@ -15,14 +16,10 @@ import {
     XellyContext,
     XellyGameType,
     XellyInstallFunction,
-    XellyMetadata,
-    XellyPixelScheme,
-    XellySpriteActor
+    XellyMetadata
 } from '@xelly/xelly.js';
 import {SudokuCreator} from '@algorithm.ts/sudoku';
-import {
-    createUndoGraphicalButton
-} from './undo';
+import {createUndoGraphicalButton} from './undo';
 // import editPenGreen from './edit-pen-green.svg';
 import editPenBlue from './edit-pen-blue.svg';
 // import editPenYellow from './edit-pen-yellow.svg';
@@ -44,8 +41,7 @@ const editPenGrayImage = new ImageSource(editPenGray);
 
 /** Metadata. */
 export const metadata: XellyMetadata = {
-    type: XellyGameType.TurnBased,
-    pixelScheme: XellyPixelScheme.Px2_0
+    type: XellyGameType.TurnBased
 };
 
 // --
@@ -74,7 +70,7 @@ const createFont = (color: Color, sizePx: number, familyOverride?: string) => {
 // --
 
 /** Square. */
-class Square extends XellySpriteActor {
+class Square extends Actor {
 
     private readonly dim: number;
     private readonly pointerChild?: Actor;
@@ -82,15 +78,15 @@ class Square extends XellySpriteActor {
     dynamicValue?: number;
     readonly fixedValue?: number;
 
-    constructor(context: XellyContext, pixelX: number, pixelY: number, dim: number, fixedValue?: number) {
+    constructor(x: number, y: number, dim: number, fixedValue?: number) {
         super({
             anchor: Vector.Zero,
-            x: xel.convert.toCssScale(context, pixelX),
-            y: xel.convert.toCssScale(context, pixelY)
-        }, context, []);
+            x: x,
+            y: y
+        });
         this.graphics.use(new Rectangle({
-            width: xel.convert.toCssScale(context, dim),
-            height: xel.convert.toCssScale(context, dim),
+            width: dim,
+            height: dim,
             color: Color.Transparent
         }));
         this.on('pointerdown', (e) => {
@@ -104,14 +100,13 @@ class Square extends XellySpriteActor {
             this.addChild(this.valueChild);
         } else {
             // the invisible clickable entity:
-            this.pointerChild = this.pointerChild = new Actor(xel.actorArgs.fromPixelBasedArgs(this.context, {
+            this.pointerChild = this.pointerChild = new Actor({
                 anchor: Vector.Zero,
                 offset: vec(1, 1),
                 width: dim - 2,
                 height: dim - 2,
-                opaque: false,
                 z: 1
-            }));
+            });
             this.addChild(this.pointerChild);
         }
     }
@@ -126,7 +121,7 @@ class Square extends XellySpriteActor {
     }
 
     createLabelEntity(val: number, fixed: boolean, color: Color): Actor {
-        const squareDimCss = xel.convert.toCssScale(this.context, this.dim);
+        const squareDimCss = this.dim;
         const font = createFont(fixed ? Color.Black : color,
             Math.round(squareDimCss * 0.6));
         const text = `${val}`;
@@ -157,7 +152,7 @@ class Square extends XellySpriteActor {
 
 }
 
-const PickerMargin = 5;
+const PickerMargin = 15;
 
 const createOpenRect = (
     width: number, height?: number, color: Color = Color.LightGray, lineWidth: number = 2) => {
@@ -172,19 +167,17 @@ const createOpenRect = (
 
 class Picker extends Actor {
 
-    private readonly context: XellyContext;
     private readonly squareDim: number;
     private penColor: Color = Color.Black;
     private border!: Actor;
 
-    constructor(context: XellyContext, squareDim: number, initialPenColor: Color) {
+    constructor(squareDim: number, initialPenColor: Color) {
         super({
             z: 1000, anchor: Vector.Zero,
-            width: xel.convert.toCssScale(context, PickerMargin * 2 + squareDim * 3),
-            height: xel.convert.toCssScale(context, PickerMargin * 2 + squareDim * 4),
+            width: PickerMargin * 2 + squareDim * 3,
+            height: PickerMargin * 2 + squareDim * 4,
             color: Color.fromRGB(255, 255, 255, 0.95)
         });
-        this.context = context;
         this.penColor = initialPenColor
         this.squareDim = squareDim;
         this.addBorder(initialPenColor);
@@ -200,8 +193,8 @@ class Picker extends Actor {
 
     addBorder(color: Color) {
         const openRect = createOpenRect(
-            xel.convert.toCssScale(this.context, PickerMargin * 2 + this.squareDim * 3),
-            xel.convert.toCssScale(this.context, PickerMargin * 2 + this.squareDim * 4),
+            PickerMargin * 2 + this.squareDim * 3,
+            PickerMargin * 2 + this.squareDim * 4,
             color,
             6/**/);
         this.border = new Actor({
@@ -219,14 +212,14 @@ class Picker extends Actor {
     }
 
     reinitialize() {
-        const pickerMarginCss = xel.convert.toCssScale(this.context, PickerMargin);
+        const pickerMarginCss = PickerMargin;
         for (let i = 1; i < 11; ++i) {
             const row = Math.floor((i - 1) / 3);
             let col = (i - 1) % 3;
             if (i === 10) {
                 col++;
             }
-            const squareDimCss = xel.convert.toCssScale(this.context, this.squareDim);
+            const squareDimCss = this.squareDim;
             const font = createFont(this.penColor, Math.round(squareDimCss * 0.8)/*, 'monospace'*/);
             const text = `${i === 10 ? '_' : i}`;
             const m = font.measureText(text);
@@ -299,7 +292,6 @@ const readGameStateFromContextParameters = (context: XellyContext) => {
 const defaultThemeColor = Color.Black;
 
 export const install: XellyInstallFunction = (context: XellyContext, engine: Engine) => {
-    console.log('xelly-sudoku-hi-res: install');
     const puzzleFromConfig = readPuzzleFromContextConfig(context);
     const userGameState = readGameStateFromContextParameters(context);
     let usePuzzle: number[];
@@ -332,13 +324,13 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
     }
 
     // -- board sizing --
-    const boardDimTarget = Math.min(context.screen.pixel.width, context.screen.pixel.height);
+    const boardDimTarget = Math.min(engine.drawWidth, engine.drawHeight);
     // squareDim = w/o it's borders!!! ...the margins between squares are pixels/borders
     const squareDim = Math.floor(((boardDimTarget - 1) / (3 * 3)) - 2);
     const subBoardDim = (squareDim + 1) * 3 + 1;
     const boardDim = (subBoardDim + 1) * 3 - 1;
-    const boardOffsetX = Math.floor((context.screen.pixel.width - boardDim) / 2);
-    const boardOffsetY = Math.floor((context.screen.pixel.height - boardDim) / 2);
+    const boardOffsetX = Math.floor((engine.drawWidth - boardDim) / 2);
+    const boardOffsetY = Math.floor((engine.drawHeight - boardDim) / 2);
 
     // -- game state --
     let pickerScope: Square | undefined = undefined;
@@ -349,11 +341,12 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
     const squares: Square[] = [];
 
     // -- picker --
-    const picker = new Picker(context, Math.round(squareDim * 1.3), currentPenColor);
+    const picker = new Picker(Math.round(squareDim * 1.3), currentPenColor);
 
     const showGameWonPanel = (text: string) => {
-        const message = xel.actors.fromText(context, text,
-            {fgColor: 'negative'}, {});
+        const message = new Actor();
+        message.graphics.use(xel.graphics.fromSpriteArray(xel.create.label(text),
+            {color: Color.White}));
         const stripe = new Actor({
             anchor: Vector.Zero,
             width: engine.drawWidth,
@@ -474,12 +467,12 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
             const subBoardOffsetY = boardOffsetY + j * (subBoardDim + 1);
             const regionOutline = new Actor({
                 anchor: Vector.Zero,
-                x: xel.convert.toCssScale(context, subBoardOffsetX),
-                y: xel.convert.toCssScale(context, subBoardOffsetY)
+                x: subBoardOffsetX,
+                y: subBoardOffsetY
             });
             regionOutline.graphics.use(new Rectangle({
-                width: xel.convert.toCssScale(context, 3 * (squareDim + 1)),
-                height: xel.convert.toCssScale(context, 3 * (squareDim + 1)),
+                width: 3 * (squareDim + 1),
+                height: 3 * (squareDim + 1),
                 lineWidth: 4,
                 color: Color.Transparent,
                 strokeColor: Color.LightGray
@@ -489,12 +482,12 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
                 if (k > 0) {
                     const verticalLine = new Actor({
                         anchor: Vector.Zero,
-                        x: xel.convert.toCssScale(context, subBoardOffsetX + k * (squareDim + 1)),
-                        y: xel.convert.toCssScale(context, subBoardOffsetY)
+                        x: subBoardOffsetX + k * (squareDim + 1),
+                        y: subBoardOffsetY
                     });
                     verticalLine.graphics.use(new Line({
                         start: vec(0, 0),
-                        end: vec(0, xel.convert.toCssScale(context, 3 * (squareDim + 1))),
+                        end: vec(0, 3 * (squareDim + 1)),
                         thickness: 1,
                         color: Color.LightGray
                     }));
@@ -504,19 +497,19 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
                     if (k == 0 && m > 0) {
                         const horizontalLine = new Actor({
                             anchor: Vector.Zero,
-                            x: xel.convert.toCssScale(context, subBoardOffsetX),
-                            y: xel.convert.toCssScale(context, subBoardOffsetY + m * (squareDim + 1))
+                            x: subBoardOffsetX,
+                            y: subBoardOffsetY + m * (squareDim + 1)
                         });
                         horizontalLine.graphics.use(new Line({
                             start: vec(0, 0),
-                            end: vec(xel.convert.toCssScale(context, 3 * (squareDim + 1)), 0),
+                            end: vec(3 * (squareDim + 1), 0),
                             thickness: 1,
                             color: Color.LightGray
                         }));
                         engine.add(horizontalLine);
                     }
                     const idx = (j * 3 + m) * 9 + i * 3 + k;
-                    const square = new Square(context,
+                    const square = new Square(
                         subBoardOffsetX + k * (squareDim + 1),
                         subBoardOffsetY + m * (squareDim + 1),
                         squareDim + 2/*border*/,

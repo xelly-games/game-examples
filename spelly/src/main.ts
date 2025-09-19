@@ -29,8 +29,7 @@ const interFontFace = new FontFace('Inter', `url(${interWoff})`);
 
 /** Metadata. */
 export const metadata: XellyMetadata = {
-    type: XellyGameType.TurnBased,
-    replayable: true
+    type: XellyGameType.TurnBased
 };
 
 // --
@@ -281,9 +280,9 @@ class Keyboard extends Actor {
                     keyHeight, xOffset + col * (keyWidth + keyboardKeyMargin), yOffset));
             }
             if (row === keyboardKeys.length - 1) { // last row
-                this.addChild(this.createKeyActor(smallFont, 'DEL', xOffset - keyboardKeyMargin,
+                this.addChild(this.createKeyActor(smallFont, 'ENTER', xOffset - keyboardKeyMargin,
                     keyHeight, 0, yOffset));
-                this.addChild(this.createKeyActor(smallFont, 'ENTER', maxKeyboardWidth - (xOffset + rowWidth + keyboardKeyMargin * 2),
+                this.addChild(this.createKeyActor(smallFont, 'DEL', maxKeyboardWidth - (xOffset + rowWidth + keyboardKeyMargin * 2),
                     keyHeight, xOffset + rowWidth + keyboardKeyMargin * 2, yOffset));
             }
         }
@@ -613,6 +612,7 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
                 name: 'keyboard',
                 z: 100
             });
+            const defaultActionDuration = 95;
             keyboard.on('initialize', () => {
                 const keyboardDefaultXOffset
                     = Math.round((engine.drawWidth - keyboard.getKeyboardBounds().dimensions.width) / 2);
@@ -626,7 +626,7 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
                     if (defaultOverlap > 0) {
                         grid.actions.moveTo({
                             pos: vec(gridDefaultXOffset, -defaultOverlap),
-                            duration: 100
+                            duration: defaultActionDuration
                         });
                     }
                 };
@@ -639,7 +639,7 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
                             onlyIfNeeded
                                 ? Math.max(keyboardDefaultYOffset, keyboardOffsetThatIsJustBelow)
                                 : keyboardOffsetThatIsJustBelow),
-                        duration: 100
+                        duration: defaultActionDuration
                     });
                 };
                 const minimizeKeyboard = (minimize: boolean, peekabooMargin: number = keyboardMinimizedPeekabooMargin) => {
@@ -648,14 +648,14 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
                             minimize ? engine.drawHeight -
                                 keyboard.getKeyboardBounds()!.localOffsetMinusControls.y - peekabooMargin
                                 : keyboardDefaultYOffset),
-                        duration: 100
+                        duration: defaultActionDuration
                     });
                     if (minimize) {
                         // whenever we're minimized, animate grid back into default
                         //  position
                         grid.actions.moveTo({
                             pos: vec(gridDefaultXOffset, gridDefaultYOffset),
-                            duration: 100
+                            duration: defaultActionDuration
                         });
                     } else {
                         maybeAnimateGridToAvoidOverlap();
@@ -717,7 +717,6 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
             engine.add(keyboard);
         });
         engine.add(grid);
-        // CONSIDER: lifecycle choice here and more efficiency of rehydration of game state
         startedPromise.then(() => {
             if (userGameState) {
                 const restoreGameState = () => {

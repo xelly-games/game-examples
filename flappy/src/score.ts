@@ -1,30 +1,26 @@
-import {XellyContext} from '@xelly/xelly.js';
 import * as xel from '@xelly/xelly.js';
-import {Actor, CollisionType, vec, Vector} from 'excalibur';
+import {Actor, CollisionType, Color, Engine, vec, Vector} from 'excalibur';
 
 export class Score extends Actor {
 
-    context: XellyContext;
     score: number;
 
-    constructor(context: XellyContext) {
-        super(xel.actorArgs.fromPixelBasedArgs(context, {
+    constructor(engine: Engine, color: Color) {
+        super({
             name: 'score',
-            text: '0',
-            opaque: true,
             anchor: Vector.Right,
-            pos: vec(context.screen.pixel.width - 5, 5)
-        }));
-        this.context = context;
+            pos: vec(engine.drawWidth - 15, 15)
+        });
         this.score = 0;
         this.body.collisionType = CollisionType.PreventCollision;
+        this.color = color;
     }
 
     incrementScore() {
         // replaces old default graphic:
-        this.graphics.add(xel.graphics.fromSprite(this.context,
+        this.graphics.use(xel.graphics.fromSpriteArray(
             xel.create.label(`${++this.score}`),
-            {bgAlpha: 1}));
+            {color: this.color, backgroundColor: Color.White}));
     }
 
 }

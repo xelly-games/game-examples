@@ -1,19 +1,19 @@
-import {XellyContext, XellySpriteActor} from '@xelly/xelly.js';
-import * as xel from '@xelly/xelly.js';
-import {CollisionType, Engine, vec} from 'excalibur';
+import {XellyContext} from '@xelly/xelly.js';
+import {Actor, CollisionType, Engine, vec, Vector} from 'excalibur';
 
-export class Paddle extends XellySpriteActor {
+export class Paddle extends Actor {
 
     started: boolean;
 
-    constructor(context: XellyContext) {
-        const sprite
-            = xel.create.filledRect(0, 0, Math.round(context.screen.pixel.width / 5), 2);
-        super(xel.actorArgs.fromPixelBasedArgs(context, {
+    constructor(context: XellyContext, engine: Engine) {
+        super({
             name: 'paddle',
-            pos: vec(context.screen.pixel.width / 2, context.screen.pixel.height - 1),
-            vel: vec(0, 0)
-        }), context, sprite, {});
+            pos: vec(engine.drawWidth / 2, engine.drawHeight - 10),
+            vel: Vector.Zero,
+            width: Math.round(engine.drawWidth / 5),
+            height: 5,
+            color: context.color.fg
+        });
         this.body.collisionType = CollisionType.Fixed;
         this.started = false;
     }

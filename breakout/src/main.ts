@@ -4,21 +4,21 @@ import {
     XellyInstallFunction,
     XellyMetadata
 } from '@xelly/xelly.js';
-import * as xel from '@xelly/xelly.js';
+import {Engine, GlobalCoordinates, Handler} from 'excalibur';
 import {Paddle} from './paddle';
 import {Ball} from './ball';
 import {createBricks} from './bricks';
 import {Config} from './constants';
-import {Engine, GlobalCoordinates, Handler, vec} from 'excalibur';
+import {createGameOverActor, createWinnerActor} from './messages';
 
 export const metadata: XellyMetadata = {
     type: XellyGameType.Realtime
 };
 
 export const install: XellyInstallFunction = (context: XellyContext, engine: Engine) => {
-    const paddle = new Paddle(context);
-    const bricks = createBricks(context);
-    const ball = new Ball(context, bricks);
+    const paddle = new Paddle(context, engine);
+    const bricks = createBricks(context, engine);
+    const ball = new Ball(context, engine, bricks);
 
     let inputDisabled = false;
     const inputHandler = (e: GlobalCoordinates) => {
@@ -61,41 +61,11 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
         engine.add(brick);
     });
 
-    // todo help w/ this in lib?
-    const gameLabel = xel.create.label('[game');
-    const [gameLabelWidth, gameLabelHeight]
-        = [xel.sprites.width(gameLabel), xel.sprites.height(gameLabel)];
-    const [skullWidth, skullHeight]
-        = [xel.sprites.width(xel.gallery.SkullSprite), xel.sprites.height(xel.gallery.SkullSprite)];
-    const overLabel = xel.create.label('over]');
-    const [overLabelWidth, overLabelHeight]
-        = [xel.sprites.width(overLabel), xel.sprites.height(overLabel)];
-
-    const compositeGameOverSprite =
-        gameLabel
-            .concat(xel.sprites.xshift(xel.gallery.SkullSprite, gameLabelWidth + 2))
-            .concat(xel.sprites.xshift(overLabel, gameLabelWidth + 2 + skullWidth + 2));
-
-    const gameOver = xel.actors.fromSprite(context, compositeGameOverSprite, {bgAlpha: 1},
-        xel.actorArgs.fromPixelBasedArgs(context, {
-            name: 'game-over-label',
-            pos: vec(context.screen.pixel.width / 2, context.screen.pixel.height / 2),
-            silenceWarnings: true
-        }));
-
-    const gameWinner = xel.actors.fromSprite(context,
-        xel.create.label('you won!!!!!!!!!!'), {bgAlpha: 1},
-        xel.actorArgs.fromPixelBasedArgs(context, {
-            name: 'game-won-label',
-            pos: vec(context.screen.pixel.width / 2, context.screen.pixel.height / 2),
-            silenceWarnings: true
-        }));
-
     ball.on('no-more-bricks', () => {
         inputDisabled = true;
         paddle.kill();
         ball.stop();
-        engine.add(gameWinner);
+        engine.add(createWinnerActor(context, engine));
         engine.emit('xelly:terminate');
     })
 
@@ -103,15 +73,7 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
         inputDisabled = true;
         paddle.kill();
         ball.stop();
-        engine.add(gameOver);
+        engine.add(createGameOverActor(context, engine));
         engine.emit('xelly:terminate');
     });
-
-    // const ruler = new XellyActor(engine.context, {
-    //     anchor: Vector.Zero,
-    //     pos: units.xelly.vec(1, 1),
-    //     height: units.css.val(engine.screen.viewport.height - engine.context.toCssScale(units.xelly.val(2))!),
-    //     width: units.xelly.val(1)
-    // });
-    // engine.add(ruler);
 };

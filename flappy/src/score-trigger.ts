@@ -1,24 +1,22 @@
 import {Actor, Collider, vec, Vector} from 'excalibur';
-import {XellyContext} from '@xelly/xelly.js';
-import * as xel from '@xelly/xelly.js';
 import {Config} from './constants';
 
 export class ScoreTrigger extends Actor {
-    constructor(context: XellyContext,
-                pixelPos: Vector,
+    constructor(pos: Vector,
                 cssWidth: number) {
         super({
             name: 'score-trigger',
             anchor: Vector.Zero,
             width: cssWidth,
             vel: vec(-Config.PipeSpeed, 0),
-            ...xel.actorArgs.fromPixelBasedArgs(context, {
-                pos: pixelPos,
-                height: Config.PipeGap
-            })
+            pos,
+            height: Config.PipeGap,
+            //color: Color.Green
         })
-        this.on('exitviewport', () => {
-            this.kill();
+        this.on('postupdate', () => {
+            if (this.pos.x < 0) {
+                this.kill();
+            }
         });
     }
     override onCollisionStart(_self: Collider, other: Collider): void {

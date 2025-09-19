@@ -3,15 +3,20 @@ import {
     XellyContext,
     XellyGameType,
     XellyInstallFunction,
-    XellyMetadata,
-    XellyPixelScheme
+    XellyMetadata
 } from '@xelly/xelly.js';
 import {
     ActionSequence,
     Actor,
     ActorArgs,
     Color,
-    Engine, Font, FontUnit, Handler, InitializeEvent, Label, ParallelActions,
+    Engine,
+    Font,
+    FontUnit,
+    Handler,
+    InitializeEvent,
+    Label,
+    ParallelActions,
     Rectangle,
     vec,
     Vector
@@ -19,8 +24,7 @@ import {
 
 /** Metadata. */
 export const metadata: XellyMetadata = {
-    type: XellyGameType.TurnBased,
-    pixelScheme: XellyPixelScheme.Px3_0
+    type: XellyGameType.TurnBased
 };
 
 // --
@@ -162,10 +166,11 @@ class PuzzleGrid extends Actor {
                     });
                     moveableBlock.graphics.use(
                         createOpenRect(this.squareDim, this.squareDim, this.context.color.fg, 6, false));
-                    const symbol = xel.actors.fromText(this.context, `${this.state[row][col]}`, {}, {
-                        pos: vec(0, 0),
-                        scale: vec(1.5, 1.5)
-                    });
+
+                    const symbol = new Actor({scale: vec(1.5, 1.5)});
+                    symbol.graphics.use(xel.graphics.fromSpriteArray(
+                        xel.create.label(`${this.state[row][col]}`),
+                        {color: this.context.color.fg}));
                     moveableBlock.addChild(symbol);
                     moveableBlock.on('pointerdown', e => {
                         const [clickedRow, clickedCol] = find2d(this.moveableBlocks, moveableBlock)!;
