@@ -20,8 +20,8 @@ To build any game, run `npm run build` in the game's directory.
 
 To run/test the game, use the https://xelly.games/utilty page.
 
-Each project uses TypeScript and builds a single bundle.js output &mdash;
-in IIFE (Immediately Invoked Function Expression) format.
+Each project uses TypeScript and builds a single `bundle.js` output &mdash;
+i.e., in IIFE (Immediately Invoked Function Expression) format.
 
 Games are designed to be dynamically loaded with
 [xelly.js](https://github.com/xelly-games/xelly.js)
