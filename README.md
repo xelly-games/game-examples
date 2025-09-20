@@ -20,8 +20,11 @@ To build any game, run `npm run build` in the game's directory.
 
 To run/test the game, use the https://xelly.games/utilty page.
 
-The projects use TypeScript and builds to IIFE (Immediately Invoked Function
-Expression) format.
+Each project uses TypeScript and builds a single bundle.js output &mdash;
+in IIFE (Immediately Invoked Function Expression) format.
 
-Games are designed to be dynamically loaded with xelly.js/excalibur explicitly
-provided by the host platform ([https://xelly.games](https://xelly.games)).
+Games are designed to be dynamically loaded with
+[xelly.js](https://github.com/xelly-games/xelly.js)
+and [excaliburjs](https://excaliburjs.com/)
+dependencies explicitly provided by the host platform 
+([https://xelly.games](https://xelly.games)).
