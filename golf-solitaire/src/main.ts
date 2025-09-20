@@ -566,7 +566,7 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
                     // animate...
                     pick.actor.actions.moveTo({
                         pos: globalPos,
-                        duration: 125
+                        duration: 126
                     }).toPromise().then(() => {
                         engine.remove(pick.actor);
                         board.placePreviouslyPoppedCard(pick);
@@ -593,7 +593,7 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
                 engine.add(popped);
                 popped.actions.moveTo({
                     pos: deckActor.visibleCard.pos.add(deckActor.pos),
-                    duration: 125,
+                    duration: 126,
                 }).toPromise().then(() => {
                     // the visibleCard gets the picked card graphic in our swap-a-roo here...
                     deckActor.visibleCard.graphics.use(popped.graphics.current!);

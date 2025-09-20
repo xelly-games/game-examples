@@ -13,7 +13,7 @@ export class Gallows extends Actor {
         const uprightHeight = this.maxHeight;
         const dropHeight = Math.round(this.maxHeight * SizingRatios.CrossBeamDropHeightPercent);
         this.sizings = {
-            thickness: 6,
+            thickness: 4,
             baseWidth,
             uprightHeight,
             dropHeight,

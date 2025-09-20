@@ -15,5 +15,4 @@ pushd poker-solitaire && npm run build && popd
 pushd running && npm run build && popd
 pushd spelly && npm run build && popd
 pushd sudoku && npm run build && popd
-pushd sudoku-hi-res && npm run build && popd
 pushd word-zap && npm run build && popd

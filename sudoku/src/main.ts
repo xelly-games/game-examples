@@ -16,7 +16,8 @@ import {
     XellyContext,
     XellyGameType,
     XellyInstallFunction,
-    XellyMetadata
+    XellyMetadata,
+    XellyPixelScheme
 } from '@xelly/xelly.js';
 import {SudokuCreator} from '@algorithm.ts/sudoku';
 import {createUndoGraphicalButton} from './undo';
@@ -345,14 +346,16 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
 
     const showGameWonPanel = (text: string) => {
         const message = new Actor();
-        message.graphics.use(xel.graphics.fromSpriteArray(xel.create.label(text),
-            {color: Color.White}));
+        const messageGraphic
+            = xel.graphics.fromSpriteArray(xel.create.label(text),
+            {color: Color.White, pixelScheme: XellyPixelScheme.Px2_0});
+        message.graphics.use(messageGraphic);
         const stripe = new Actor({
             anchor: Vector.Zero,
             width: engine.drawWidth,
-            height: message.height * 4,
-            color: defaultThemeColor,
-            pos: vec(0, engine.drawHeight / 2 - message.height * 2)
+            height: messageGraphic.height * 4,
+            color: Color.Black,
+            pos: vec(0, engine.drawHeight / 2 - messageGraphic.height * 2)
         });
         message.pos = vec(stripe.width / 2, stripe.height / 2);
         stripe.addChild(message);
@@ -381,7 +384,7 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
             pickerScope!.setUserValue(num, currentPenColor);
             runtimeUserState[puzzleIndexScope!] = num;
             undoStack.splice(0, undoStack.length, ...undoStack.filter(item => item.index !== puzzleIndexScope!));
-            undoStack.push({ index: puzzleIndexScope!, square: pickerScope! });
+            undoStack.push({index: puzzleIndexScope!, square: pickerScope!});
         }
         returnToBaseState();
         if (arrayEq(useSolution, runtimeUserState)) { // win!

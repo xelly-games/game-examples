@@ -11,8 +11,7 @@ the social microgames platform!
 - **hangman**: Classic game, "pixelized" ([link](https://xelly.games/game/d9ccdebd-8e22-43b7-bc2d-9713d495a55b))
 - **poker-solitaire**: Poker solitaire game; assumes **tall** aspect ratio. ([link](https://xelly.games/game/44b5a6d0-8330-49b7-905f-4465134674b4))
 - **spelly**: Wordle clone; assumes **tall** aspect ratio. ([link](https://xelly.games/game/f10afc35-8ebb-4bd6-8e08-f0dccdda1355))
-- **sudoku**: Sudoku with "pixelized" graphics.
-- **sudoku-hi-res**: Sudoku. ([link](https://xelly.games/game/bc9738f3-274f-460d-9fac-0769524f1a55))
+- **sudoku**: Sudoku. ([link](https://xelly.games/game/bc9738f3-274f-460d-9fac-0769524f1a55))
 - **word-zap**: Word zap game. ([link](https://xelly.games/game/9d040148-0517-4066-92b8-0061ea5363b4))
 
 ## Build Instructions

@@ -15,5 +15,4 @@ pushd poker-solitaire && npm install && popd
 pushd running && npm install && popd
 pushd spelly && npm install && popd
 pushd sudoku && npm install && popd
-pushd sudoku-hi-res && npm install && popd
 pushd word-zap && npm install && popd

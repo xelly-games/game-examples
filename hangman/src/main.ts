@@ -5,7 +5,7 @@ import {
     XellyInstallFunction,
     XellyMetadata
 } from '@xelly/xelly.js';
-import {Actor, Color, Engine, vec, Vector} from 'excalibur';
+import {Actor, Color, Engine, Line, vec, Vector} from 'excalibur';
 import {Config} from './constants';
 import {Gallows} from './gallows/Gallows';
 //import {idioms} from './easy-idioms';
@@ -89,22 +89,22 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
     engine.add(letterPicker);
 
     // --
-    const gallowsMargin = vec(Config.GallowsLeftMargin, 25); // todo
-    const gallowsHeight = /*todo*/Math.floor(engine.drawWidth * 0.35);
-    const gallowsWidth = /*todo*/engine.drawHeight
-        - letterPicker.pos.y - letterPicker.totalHeight() - gallowsMargin.y * 2;
-    const gallows = new Gallows(context.color.fg, gallowsHeight, gallowsWidth, hardMode);
+    const gallowsMargin = vec(Config.GallowsLeftMargin, 25);
+    const gallowsWidth = Math.floor(engine.drawWidth * 0.35);
+    const gallowsHeight = engine.drawHeight
+        - letterPicker.pos.y - letterPicker.totalHeightFirstTwoRows - gallowsMargin.y * 2;
+    const gallows = new Gallows(context.color.fg, gallowsWidth, gallowsHeight, hardMode);
     gallows.pos = vec(gallowsMargin.x,
-        letterPicker.pos.y + letterPicker.totalHeight() + gallowsMargin.y);
+        letterPicker.pos.y + letterPicker.totalHeightFirstTwoRows + gallowsMargin.y);
     engine.add(gallows);
 
     // --
     const phrase = new Phrase(phraseStr, context.color.fg,
-        engine.drawWidth - /*todo*/gallows.maxWidth
+        engine.drawWidth - gallows.maxWidth
         - gallowsMargin.x * 2 - Config.PhraseMarginY * 2);
     phrase.pos = vec(
-        Math.floor((gallows.pos.x + gallows.maxWidth + gallowsMargin.x)),
-        Math.floor(gallows.pos.y + gallowsHeight / 2));
+        Math.floor(gallows.pos.x + gallows.maxWidth + gallowsMargin.x),
+        Math.floor(gallows.pos.y + gallowsHeight / 2 - phrase.totalHeight() / 2));
     engine.add(phrase);
 
     // --

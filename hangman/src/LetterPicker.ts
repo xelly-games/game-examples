@@ -49,6 +49,8 @@ const createLetters = (themeColor: Color, padding: Vector = Config.PickerLetterP
 
 export class LetterPicker extends Actor {
 
+    public readonly totalHeightFirstTwoRows: number;
+
     constructor(themeColor: Color, private maxWidth: number) {
         super({anchor: Vector.Zero, color: themeColor});
         const letters = createLetters(this.color);
@@ -92,6 +94,8 @@ export class LetterPicker extends Actor {
             theRow.pos.y = i * (letters.maxHeight + Config.PickerLetterSpacingY);
             this.addChild(theRow);
         }
+        this.totalHeightFirstTwoRows = letters.maxHeight * 2
+            + Config.PickerLetterSpacingY;
         // in this case, this is how clients of this class can get the overall
         //  bounds -- i.e., via letterPicker.graphics.current!.width etc.
         this.graphics.use(new Rectangle({
