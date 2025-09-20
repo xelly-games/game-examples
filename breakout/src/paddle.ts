@@ -1,18 +1,17 @@
-import {XellyContext} from '@xelly/xelly.js';
-import {Actor, CollisionType, Engine, vec, Vector} from 'excalibur';
+import {Actor, CollisionType, Color, Engine, vec, Vector} from 'excalibur';
 
 export class Paddle extends Actor {
 
     started: boolean;
 
-    constructor(context: XellyContext, engine: Engine) {
+    constructor(themeColor: Color, engine: Engine) {
         super({
             name: 'paddle',
             pos: vec(engine.drawWidth / 2, engine.drawHeight - 10),
             vel: Vector.Zero,
             width: Math.round(engine.drawWidth / 5),
             height: 5,
-            color: context.color.fg
+            color: themeColor
         });
         this.body.collisionType = CollisionType.Fixed;
         this.started = false;

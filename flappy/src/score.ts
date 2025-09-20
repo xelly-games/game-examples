@@ -18,8 +18,8 @@ export class Score extends Actor {
 
     incrementScore() {
         // replaces old default graphic:
-        this.graphics.use(xel.graphics.fromSpriteArray(
-            xel.create.label(`${++this.score}`),
+        this.graphics.use(xel.graphics.fromText(
+            `${++this.score}`,
             {color: this.color, backgroundColor: Color.White}));
     }
 

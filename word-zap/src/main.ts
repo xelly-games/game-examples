@@ -34,6 +34,7 @@ const InitialFallingVelocity = 120;
 
 /** Install. */
 export const install: XellyInstallFunction = (context: XellyContext, engine: Engine) => {
+    const themeColor = context.color.fg;
     const keyboard = new Keyboard(context, {
         minimizer: false,
         animateDepressedKeys: true
@@ -45,19 +46,18 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
             Math.floor(engine.drawHeight / 2)),
         z: 100,
     });
-    tapToStart.graphics.use(xel.graphics.fromSpriteArray(
-        xel.create.label('tap to start'), {
-            color: context.color.fg,
-            borderWidth: 8,
-            borderRadius: 1,
-            borderColor: context.color.fg,
-            cssWidthAndHeightOverride: cssWidthAndHeight =>
-                vec(cssWidthAndHeight.x + 60, cssWidthAndHeight.y + 60)
-        }));
+    tapToStart.graphics.use(xel.graphics.fromText('tap to start', {
+        color: themeColor,
+        borderWidth: 8,
+        borderRadius: 1,
+        borderColor: themeColor,
+        cssWidthAndHeightOverride: cssWidthAndHeight =>
+            vec(cssWidthAndHeight.x + 60, cssWidthAndHeight.y + 60)
+    }));
 
     keyboard.on('initialize', () => {
         const line = new Line({
-            color: context.color.fg,
+            color: themeColor,
             thickness: 3,
             start: vec(0, 0),
             end: vec(engine.drawWidth, 0)
@@ -110,7 +110,7 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
         ]
     });
 
-    const score = new Score(engine, context.color.fg);
+    const score = new Score(engine, themeColor);
     score.addOrReplaceScoreGraphic(0);
     engine.add(score);
 
@@ -122,8 +122,8 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
             action: () => {
                 const newLetter = String.fromCharCode(65 + Math.floor(Math.random() * 26))/*A-Z*/;
                 const newLetterGraphic
-                    = xel.graphics.fromSpriteArray(xel.create.label(newLetter),
-                    { color: context.color.fg });
+                    = xel.graphics.fromText(newLetter,
+                    { color: themeColor });
                 const newLetterActor = new Actor({
                     pos: vec(Math.random() * (engine.drawWidth - FallingLettersMarginX * 2 + 1)
                         + FallingLettersMarginX, 0),
@@ -162,13 +162,13 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
                     });
                     const parallel = new ParallelActions([scaleSequence, moveSequence]);
                     score.actions.runAction(parallel).toPromise().then(() => {
-                        const skull = new Actor({
-                            pos: vec(engine.drawWidth / 2,
-                                score.pos.y - score.graphics.current!.height - 5),
-                            scale: vec(2, 2)
-                        });
-                        skull.graphics.use(xel.graphics.fromSpriteArray(xel.gallery.SkullSprite,
-                            {color: context.color.fg}));
+                        const skull = xel.actors.fromSpriteArray(xel.gallery.SkullSprite,
+                            {
+                                pos: vec(engine.drawWidth / 2,
+                                    score.pos.y - score.graphics.current!.height - 5),
+                                scale: vec(2, 2),
+                                color: themeColor
+                            });
                         skull.actions.blink(150, 150, 2);
                         engine.add(skull);
                         engine.emit('xelly:terminate'); // !!!

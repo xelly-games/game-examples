@@ -17,7 +17,7 @@ type PhraseLine = {
 };
 
 export const determineMaxLetterWidth = () => {
-    const letterWGraphic = xel.graphics.fromSpriteArray(xel.create.label('W'));
+    const letterWGraphic = xel.graphics.fromText('W');
     return letterWGraphic.width;
 }
 
@@ -25,8 +25,7 @@ export const layoutPhrase = (phrase: string, themeColor: Color, maxWidth: number
     const vspacing = Config.PhraseLineSpacingY;
     const letterSpacing = 3;
 
-    const hyphenGraphic = xel.graphics.fromSpriteArray(xel.create.label('-'),
-        {color: themeColor});
+    const hyphenGraphic = xel.graphics.fromText('-', {color: themeColor});
     const useSpaceWidth = Math.ceil(hyphenGraphic.width * 1.5);
 
     const MaxLetterWidth = determineMaxLetterWidth();
@@ -44,7 +43,7 @@ export const layoutPhrase = (phrase: string, themeColor: Color, maxWidth: number
     for (let i = 0; i < words.length; i++) {
         const word = words[i];
         for (const letter of word) {
-            const letterGraphic = xel.graphics.fromSpriteArray(xel.create.label(letter),
+            const letterGraphic = xel.graphics.fromText(letter,
                 {color: themeColor});
             currentLineHeight = letterGraphic.height; // assume all letters same height
             if (currentLineWidth + /*letterSpriteWidth*/MaxLetterWidth + letterSpacing > maxWidth) {
@@ -73,14 +72,14 @@ export const layoutPhrase = (phrase: string, themeColor: Color, maxWidth: number
                     currentLineWidth = 0;
                     for (let wordGraphic of nextWordGraphics) {
                         for (let wordLetterGraphic of wordGraphic) {
-                            currentLineWidth += /*xel.measure.width(wordSpriteLetter)*/MaxLetterWidth + letterSpacing;
+                            currentLineWidth += MaxLetterWidth + letterSpacing;
                         }
                     }
                 }
             } else {
                 currentLine.wordLetters[currentLine.wordLetters.length - 1].push(letter);
                 currentLine.wordGraphics[currentLine.wordLetters.length - 1].push(letterGraphic);
-                currentLineWidth += /*xel.measure.width(letterSprite)*/MaxLetterWidth + letterSpacing;
+                currentLineWidth += MaxLetterWidth + letterSpacing;
             }
         }
         if (i < words.length - 1) { // more words are coming

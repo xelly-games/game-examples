@@ -25,14 +25,15 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
         const paddingFn
             = (cssWidthAndHeight: Vector) => vec(cssWidthAndHeight.x + 6, cssWidthAndHeight.y + cssRibbonPadding);
         if (xVel > 0) {
-            const graphic = xel.graphics.fromSpriteArray(xel.create.label(sentence(), {font: 'font2'}), {
+            const graphic = xel.graphics.fromText(sentence(), {
+                font: 'font2',
                 color: Color.ExcaliburBlue,
                 cssWidthAndHeightOverride: paddingFn});
             message.graphics.use(graphic);
             message.pos = vec(-graphic.width, yPos);
             message.vel.x = xVel;
         } else {
-            message.graphics.use(xel.graphics.fromSpriteArray(xel.create.label(sentence()), {
+            message.graphics.use(xel.graphics.fromText(sentence(), {
                 color: Color.White,
                 backgroundColor: Color.Viridian,
                 cssWidthAndHeightOverride: paddingFn
@@ -52,7 +53,7 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
     };
 
     // create a graphic just to measure the height of the sprite in "real"/css pixels:
-    const cssRowHeight = xel.graphics.fromSpriteArray(xel.create.label('a')).height + cssRibbonPadding * 2;
+    const cssRowHeight = xel.graphics.fromText('a').height + cssRibbonPadding * 2;
     const rows = Math.floor((engine.drawHeight - cssRibbonMarginY) / (cssRowHeight + cssRibbonMarginY));
     const trueHeight = rows * (cssRowHeight + cssRibbonMarginY) + cssRibbonMarginY;
     const offsety = Math.floor((engine.drawHeight - trueHeight) / 2);

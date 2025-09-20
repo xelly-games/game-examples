@@ -19,8 +19,8 @@ export class Score extends Actor {
 
     addOrReplaceScoreGraphic(score: number) {
         // replaces old default graphic:
-        this.graphics.use(xel.graphics.fromSpriteArray(
-            xel.create.label(`Score: ${score}`),
+        this.graphics.use(xel.graphics.fromText(
+            `Score: ${score}`,
             {
                 color: this.color,
                 backgroundColor: Color.White,

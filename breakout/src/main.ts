@@ -16,9 +16,11 @@ export const metadata: XellyMetadata = {
 };
 
 export const install: XellyInstallFunction = (context: XellyContext, engine: Engine) => {
-    const paddle = new Paddle(context, engine);
+    const themeColor = context.color.fg;
+
+    const paddle = new Paddle(themeColor, engine);
     const bricks = createBricks(context, engine);
-    const ball = new Ball(context, engine, bricks);
+    const ball = new Ball(themeColor, engine, bricks);
 
     let inputDisabled = false;
     const inputHandler = (e: GlobalCoordinates) => {
@@ -65,7 +67,7 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
         inputDisabled = true;
         paddle.kill();
         ball.stop();
-        engine.add(createWinnerActor(context, engine));
+        engine.add(createWinnerActor(themeColor, engine));
         engine.emit('xelly:terminate');
     })
 
@@ -73,7 +75,7 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
         inputDisabled = true;
         paddle.kill();
         ball.stop();
-        engine.add(createGameOverActor(context, engine));
+        engine.add(createGameOverActor(themeColor, engine));
         engine.emit('xelly:terminate');
     });
 };

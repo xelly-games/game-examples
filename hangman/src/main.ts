@@ -5,7 +5,7 @@ import {
     XellyInstallFunction,
     XellyMetadata
 } from '@xelly/xelly.js';
-import {Actor, Color, Engine, Line, vec, Vector} from 'excalibur';
+import {Actor, Color, Engine, vec, Vector} from 'excalibur';
 import {Config} from './constants';
 import {Gallows} from './gallows/Gallows';
 //import {idioms} from './easy-idioms';
@@ -15,8 +15,7 @@ import {Phrase} from './phrase/Phrase';
 
 /** Metadata. */
 export const metadata: XellyMetadata = {
-    type: XellyGameType.TurnBased,
-    forkable: false
+    type: XellyGameType.TurnBased
 };
 
 // -- context.parameters --
@@ -110,8 +109,7 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
     // --
     const showMessagePanel = (text: string) => {
         const graphic
-            = xel.graphics.fromSpriteArray(xel.create.label(text),
-            {color: Color.White});
+            = xel.graphics.fromText(text, {color: Color.White});
         const panel = new Actor({
             anchor: Vector.Zero,
             width: engine.drawWidth,

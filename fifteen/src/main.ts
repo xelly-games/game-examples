@@ -128,19 +128,17 @@ const find2d = <T>(a: T[][], b: T): [number, number] | undefined => {
 
 /** PuzzleGrid. */
 class PuzzleGrid extends Actor {
-    private readonly context: XellyContext;
     private readonly moveableBlocks: (Actor | undefined)[][];
     private readonly state: number[][];
     private squareDim: number | undefined;
     private currEmptyPos: Vector | undefined;
     private currEmptyRowCol: [number, number] | undefined;
 
-    constructor(context: XellyContext, config: ActorArgs, startingState: number[][]) {
+    constructor(config: ActorArgs, startingState: number[][]) {
         super({
             anchor: Vector.Zero,
             ...config
         });
-        this.context = context;
         this.moveableBlocks = createMatrix(4, 4);
         this.state = startingState;
     }
@@ -165,13 +163,12 @@ class PuzzleGrid extends Actor {
                         z: 100
                     });
                     moveableBlock.graphics.use(
-                        createOpenRect(this.squareDim, this.squareDim, this.context.color.fg, 6, false));
+                        createOpenRect(this.squareDim, this.squareDim, this.color, 6, false));
 
-                    const symbol = new Actor({scale: vec(1.5, 1.5)});
-                    symbol.graphics.use(xel.graphics.fromSpriteArray(
-                        xel.create.label(`${this.state[row][col]}`),
-                        {color: this.context.color.fg}));
-                    moveableBlock.addChild(symbol);
+                    moveableBlock.addChild(xel.actors.fromText(`${this.state[row][col]}`, {
+                        scale: vec(1.5, 1.5),
+                        color: this.color
+                    }));
                     moveableBlock.on('pointerdown', e => {
                         const [clickedRow, clickedCol] = find2d(this.moveableBlocks, moveableBlock)!;
                         const [currEmptyRow, currEmptyCol] = this.currEmptyRowCol!;
@@ -290,10 +287,11 @@ class PuzzleGrid extends Actor {
 
 /** Install. */
 export const install: XellyInstallFunction = (context: XellyContext, engine: Engine) => {
+    const themeColor = context.color.fg;
     const solution = [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 0]];
     const puzzle = solution.map(row => [...row]);
     shuffle_(puzzle, [3, 3]);
-    const grid = new PuzzleGrid(context, {}, puzzle);
+    const grid = new PuzzleGrid({color: themeColor}, puzzle);
 
     let enteredTime: number | undefined = undefined;
     engine.on('xelly:enter', () => {
@@ -311,7 +309,7 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
 
             grid.jiggle().then(() => {
                 engine.add(createModal(minutes > 0 ?
-                    `you won in ${minutes} ${minutesText}, ${seconds} ${secondsText}` : `you won in ${seconds} ${secondsText}`, context.color.fg));
+                    `you won in ${minutes} ${minutesText}, ${seconds} ${secondsText}` : `you won in ${seconds} ${secondsText}`, themeColor));
                 engine.emit('xelly:terminate');
             });
         }

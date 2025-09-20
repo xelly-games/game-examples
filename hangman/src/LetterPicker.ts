@@ -21,13 +21,13 @@ const createLetters = (themeColor: Color, padding: Vector = Config.PickerLetterP
     for (let i = 65; i <= 90; i++) { // upper case letters
         const char = String.fromCharCode(i);
         const graphic
-            = xel.graphics.fromSpriteArray(xel.create.label(char, {/*font: 'font2'*/}),
+            = xel.graphics.fromText(char,
             {
                 color: themeColor,
                 cssWidthAndHeightOverride: dim => dim.add(padding)
             });
         const pickedGraphic
-            = xel.graphics.fromSpriteArray(xel.create.label(char, {/*font: 'font2'*/}),
+            = xel.graphics.fromText(char,
             {
                 color: themeColor.clone().lighten(0.8),
                 cssWidthAndHeightOverride: dim => dim.add(padding)

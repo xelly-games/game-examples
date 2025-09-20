@@ -1,12 +1,11 @@
 import * as xel from '@xelly/xelly.js';
-import {XellyContext} from '@xelly/xelly.js';
-import {Config, GamePixelScheme} from './constants';
+import {Config} from './constants';
 import {
     Actor,
     Collider,
-    ColliderComponent,
     CollisionContact,
     CollisionType,
+    Color,
     Engine,
     Entity,
     Side,
@@ -22,18 +21,14 @@ export class Ball extends Actor {
     private numBricksAlive;
     private dead = false;
 
-    constructor(context: XellyContext, engine: Engine, bricks: Entity[]) {
+    constructor(themeColor: Color, engine: Engine, bricks: Entity[]) {
         super({
             angularVelocity: Config.BallAngularVelocity,
             pos: vec(engine.drawWidth / 2, engine.drawHeight / 2),
         });
         const sprite = xel.create.circle(0, 0, Config.BallRadius_xelly);
-        this.graphics.use(
-            xel.graphics.fromSpriteArray(sprite, {
-                color: context.color.fg,
-                pixelScheme: GamePixelScheme}));
-        this.collider = new ColliderComponent(xel.colliders.generate(GamePixelScheme, sprite)!);
-        this.addComponent(this.collider, true);
+        this.graphics.use(xel.graphics.fromSpriteArray(sprite, {color: themeColor}));
+        xel.colliders.addTo(this, sprite);
 
         this.ballSpeed = Config.BallSpeed;
         this.colliding = false;

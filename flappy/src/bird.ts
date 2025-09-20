@@ -14,7 +14,7 @@ import {
 } from 'excalibur';
 import {Ground} from './ground';
 import {Pipe} from './pipe';
-import {Config, GamePixelScheme} from './constants';
+import {Config} from './constants';
 
 const flappyBirdHeadSprite: [number, number][] = [
     [3, 1], [3, 2], [3, 3],
@@ -80,14 +80,9 @@ export class DeadBirdHead extends Actor {
             angularVelocity: 5,
             z: 2
         });
-        const graphic
-            = xel.graphics.fromSpriteArray(flappyBirdHeadSprite,
-            {pixelScheme: GamePixelScheme, color});
-        const collider
-            = xel.colliders.generate(GamePixelScheme, flappyBirdHeadSprite);
-        this.collider = new ColliderComponent(collider!);
-        this.addComponent(this.collider, true);
-        this.graphics.use(graphic);
+        this.graphics.use(
+            xel.graphics.fromSpriteArray(flappyBirdHeadSprite, {color}));
+        xel.colliders.addTo(this, flappyBirdHeadSprite);
         this.body.collisionType = CollisionType.Passive;
     }
 
@@ -114,14 +109,9 @@ export class DeadBirdBody extends Actor {
             angularVelocity: -5,
             vel: vec(-15, 0)
         });
-        const graphic
-            = xel.graphics.fromSpriteArray(flappyBirdBodySprite,
-            {pixelScheme: GamePixelScheme, color});
-        const collider
-            = xel.colliders.generate(GamePixelScheme, flappyBirdBodySprite);
-        this.collider = new ColliderComponent(collider!);
-        this.addComponent(this.collider, true);
-        this.graphics.use(graphic);
+        this.graphics.use(
+            xel.graphics.fromSpriteArray(flappyBirdBodySprite, {color}));
+        xel.colliders.addTo(this, flappyBirdHeadSprite);
         this.body.collisionType = CollisionType.Passive;
     }
 
@@ -146,19 +136,14 @@ export class Bird extends Actor {
     constructor(color: Color, engine: Engine) {
         super({
             name: 'bird',
+            color,
             pos: vec(
                 Math.floor(engine.drawWidth / 2),
                 Math.floor(engine.drawHeight / 2))
         });
-        const graphic
-            = xel.graphics.fromSpriteArray(flappyBirdSprite,
-            {pixelScheme: GamePixelScheme, color});
-        const collider
-            = xel.colliders.generate(GamePixelScheme, flappyBirdSprite);
-        this.collider = new ColliderComponent(collider!);
-        this.addComponent(this.collider, true);
-        this.graphics.use(graphic);
-        this.color = color;
+        this.graphics.use(
+            xel.graphics.fromSpriteArray(flappyBirdSprite, {color}));
+        xel.colliders.addTo(this, flappyBirdSprite);
     }
 
     override onInitialize(): void {

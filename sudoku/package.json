@@ -16,8 +16,8 @@
   "description": "",
   "dependencies": {
     "@algorithm.ts/sudoku": "^4.0.3",
-    "excalibur": "~0.30.3",
-    "@xelly/xelly.js": "1.1.0"
+    "@xelly/xelly.js": "2.0.0",
+    "excalibur": "~0.30.3"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^16.0.0",
