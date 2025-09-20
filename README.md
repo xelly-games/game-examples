@@ -3,7 +3,7 @@ the social microgames platform!
 
 ## Games
 
-- **breakout**: Classic arcade game ([link](https://xelly.games/game/2043d642-a556-480e-be5a-8541f8fc147a))
+- **breakout**: Classic arcade game ([link](https://xelly.games/game/2043d642-a556-480e-be5a-8541f8fc147a){:target="_blank"})
 - **chemi**: Much like liquid sort games. ([link](https://xelly.games/game/b7eba4db-dc4b-4cfe-8420-3e42e494e520))
 - **fifteen**: Number placement puzzle. ([link](https://xelly.games/game/41e8374d-09df-4723-a39f-3bbb8df02d21))
 - **flappy**: "Pixelized" flappy bird implementation. ([link](https://xelly.games/game/7c7744cd-a302-42de-9d8e-5eade3a8b723))
