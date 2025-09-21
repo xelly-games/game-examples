@@ -2,7 +2,7 @@
 
 set -ex
 
-XELLY_JS_VERSION="2.0.1"
+XELLY_JS_VERSION="2.0.3"
 
 pushd breakout && npm install "@xelly/xelly.js@${XELLY_JS_VERSION}" --save-exact && popd
 pushd chemi && npm install "@xelly/xelly.js@${XELLY_JS_VERSION}" --save-exact && popd

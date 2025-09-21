@@ -15,7 +15,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@xelly/xelly.js": "2.0.1",
+    "@xelly/xelly.js": "2.0.3",
     "excalibur": "~0.30.3"
   },
   "devDependencies": {
