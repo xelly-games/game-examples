@@ -1,6 +1,5 @@
 import * as xel from '@xelly/xelly.js';
-import {XellyContext} from '@xelly/xelly.js';
-import {Actor, Color, Engine, vec} from 'excalibur';
+import {Color, Engine, vec} from 'excalibur';
 
 const gameLabel: [number, number, Color?][] = xel.create.label('[game');
 const overLabel: [number, number, Color?][] = xel.create.label('over]');

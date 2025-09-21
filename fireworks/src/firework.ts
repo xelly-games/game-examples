@@ -1,4 +1,14 @@
-import { Actor, BodyComponent, Color, coroutine, CoroutineGenerator, ParticleEmitter, Random, vec, Vector } from "excalibur";
+import {
+    Actor,
+    BodyComponent,
+    Color,
+    coroutine,
+    CoroutineGenerator,
+    ParticleEmitter,
+    Random,
+    vec,
+    Vector
+} from "excalibur";
 
 export class Firework extends Actor {
     random: Random;

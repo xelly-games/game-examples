@@ -5,7 +5,6 @@ import {
     AnimationStrategy,
     clamp,
     Collider,
-    ColliderComponent,
     CollisionType,
     Color,
     Engine,

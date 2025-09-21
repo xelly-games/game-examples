@@ -1,5 +1,5 @@
-import { Color, Engine, Random, Scene, Timer, vec } from "excalibur";
-import { Firework } from './firework';
+import {Color, Engine, Random, Scene, Timer, vec} from "excalibur";
+import {Firework} from './firework';
 
 export class MyLevel extends Scene {
     timer!: Timer;

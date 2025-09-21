@@ -1,4 +1,4 @@
-import { Raster, RasterOptions } from 'excalibur';
+import {Raster, RasterOptions} from 'excalibur';
 
 export interface ProgressOptions {
     width: number;
