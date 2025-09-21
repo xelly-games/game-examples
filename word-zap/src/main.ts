@@ -22,6 +22,7 @@ import {
     Vector
 } from 'excalibur';
 import {Score} from './score';
+import {Skull} from './sprite';
 
 /** Metadata. */
 export const metadata: XellyMetadata = {
@@ -162,7 +163,7 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
                     });
                     const parallel = new ParallelActions([scaleSequence, moveSequence]);
                     score.actions.runAction(parallel).toPromise().then(() => {
-                        const skull = xel.actors.fromSpriteArray(xel.gallery.SkullSprite,
+                        const skull = xel.actors.fromAscii(Skull[0], Skull[1],
                             {
                                 pos: vec(engine.drawWidth / 2,
                                     score.pos.y - score.graphics.current!.height - 5),
