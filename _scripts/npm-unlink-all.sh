@@ -15,4 +15,5 @@ pushd poker-solitaire && npm unlink @xelly/xelly.js --no-save && popd
 pushd running && npm unlink @xelly/xelly.js --no-save && popd
 pushd spelly && npm unlink @xelly/xelly.js --no-save && popd
 pushd sudoku && npm unlink @xelly/xelly.js --no-save && popd
+pushd tetris && npm unlink @xelly/xelly.js --no-save && popd
 pushd word-zap && npm unlink @xelly/xelly.js --no-save && popd

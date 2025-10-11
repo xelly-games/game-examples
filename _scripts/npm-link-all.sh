@@ -15,4 +15,5 @@ pushd poker-solitaire && npm link @xelly/xelly.js && popd
 pushd running && npm link @xelly/xelly.js && popd
 pushd spelly && npm link @xelly/xelly.js && popd
 pushd sudoku && npm link @xelly/xelly.js && popd
+pushd tetris && npm link @xelly/xelly.js && popd
 pushd word-zap && npm link @xelly/xelly.js && popd

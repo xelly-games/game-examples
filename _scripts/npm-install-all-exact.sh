@@ -17,4 +17,5 @@ pushd poker-solitaire && npm install "@xelly/xelly.js@${XELLY_JS_VERSION}" --sav
 pushd running && npm install "@xelly/xelly.js@${XELLY_JS_VERSION}" --save-exact && popd
 pushd spelly && npm install "@xelly/xelly.js@${XELLY_JS_VERSION}" --save-exact && popd
 pushd sudoku && npm install "@xelly/xelly.js@${XELLY_JS_VERSION}" --save-exact && popd
+pushd tetris && npm install "@xelly/xelly.js@${XELLY_JS_VERSION}" --save-exact && popd
 pushd word-zap && npm install "@xelly/xelly.js@${XELLY_JS_VERSION}" --save-exact && popd
