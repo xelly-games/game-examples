@@ -10,13 +10,13 @@ const createButtonOptions = (themeColor: Color) => {
         anchor: Vector.Zero,
         pixelScheme: XellyPixelScheme.Px2_0,
         font: 'font2' as const,
-        color: themeColor,
+        color: themeColor.lighten(Config.DefaultButtonLightenFactor),
         backgroundColor: Color.White,
         cssPosition: Config.DefaultButtonPadding,
         cssWidthAndHeightOverride:
             (dim: Vector) => dim.add(Config.DefaultButtonPadding).add(Config.DefaultButtonPadding),
         borderWidth: 2,
-        borderColor: themeColor,
+        borderColor: themeColor.lighten(Config.DefaultButtonLightenFactor),
         borderRadius: 5
     };
 };
@@ -36,17 +36,17 @@ const moveArrowAscii = `
 `;
 
 const moveArrow2Ascii = `
-        ####
-       #   #
+        ###
+       #  #
       #   #
-     #   ######
+     #    #####
     #         # 
    #          #
     #         #
-     #   ###### 
+     #    ##### 
       #   #
-       #   #
-        ####
+       #  #
+        ###
 `;
 
 export const createMoveArrowButton = async (themeColor: Color, maxVisibleWidth: number, direction: 'left' | 'right') => {
@@ -54,14 +54,14 @@ export const createMoveArrowButton = async (themeColor: Color, maxVisibleWidth: 
     return imageSource.load().then(() => {
         // const graphic = imageSource.toSprite();
         const graphic = xel.graphics.fromAscii(moveArrow2Ascii, [],
-            {pixelScheme: XellyPixelScheme.Px3_0, color: themeColor, anchor: Vector.Zero,
+            {pixelScheme: XellyPixelScheme.Px3_0, color: themeColor.lighten(Config.DefaultButtonLightenFactor), anchor: Vector.Zero,
                 cssPosition: vec(16, 10),
-                borderWidth: 2, borderColor: themeColor.lighten(0.5), borderRadius: 10,
+                borderWidth: 2, borderColor: themeColor.lighten(Config.DefaultButtonLightenFactor), borderRadius: 10,
                 cssWidthAndHeightOverride: (dim: Vector) => dim.add(vec(32, 20))});
         const graphicDepressed = xel.graphics.fromAscii(moveArrow2Ascii, [],
-            {pixelScheme: XellyPixelScheme.Px3_0, color: Color.White, backgroundColor: themeColor, anchor: Vector.Zero,
+            {pixelScheme: XellyPixelScheme.Px3_0, color: Color.White, backgroundColor: themeColor.lighten(Config.DefaultButtonLightenFactor), anchor: Vector.Zero,
                 cssPosition: vec(16, 10),
-                borderWidth: 2, borderColor: themeColor.lighten(0.5), borderRadius: 10,
+                borderWidth: 2, borderColor: themeColor.lighten(Config.DefaultButtonLightenFactor), borderRadius: 10,
                 cssWidthAndHeightOverride: (dim: Vector) => dim.add(vec(32, 20))});
         //graphic.scale = vec(maxVisibleWidth / graphic.width, maxVisibleWidth / graphic.height);
         if (direction === 'right') {

@@ -12,7 +12,7 @@ the social microgames platform!
 - **poker-solitaire**: Poker solitaire game; assumes **tall** aspect ratio. ([link](https://xelly.games/game/44b5a6d0-8330-49b7-905f-4465134674b4))
 - **spelly**: Wordle clone; assumes **tall** aspect ratio. ([link](https://xelly.games/game/f10afc35-8ebb-4bd6-8e08-f0dccdda1355))
 - **sudoku**: Sudoku. ([link](https://xelly.games/game/bc9738f3-274f-460d-9fac-0769524f1a55))
-- **tetris**: A Tetris clone.
+- **tetris**: A Tetris clone. ([link](https://xelly.games/game/8c670b68-b5b0-485f-80e3-b6ee3c6ffd43))
 - **word-zap**: Word zap game. ([link](https://xelly.games/game/9d040148-0517-4066-92b8-0061ea5363b4))
 
 ## Build Instructions

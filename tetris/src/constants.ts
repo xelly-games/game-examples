@@ -12,6 +12,7 @@ export const Config = {
     // -- buttons --
     DefaultButtonMargin: vec(5, 5),
     DefaultButtonPadding: vec(10, 8),
+    DefaultButtonLightenFactor: 0.3,
     RotateButtonVisiblePadding: vec(0, 0),
     RotateButtonInvisiblePadding: vec(26, 12),
     MoveArrowButtonVisiblePadding: vec(4, 16),
