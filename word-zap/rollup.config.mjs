@@ -14,6 +14,6 @@ export default {
             'excalibur': 'Excal',
             '@xelly/xelly.js': 'Xelly'
         },
-        plugins: [/*terser()*/]
+        plugins: [terser()]
     }
 };
