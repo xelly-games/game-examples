@@ -11,6 +11,7 @@ import {
     Font,
     FontUnit,
     Label,
+    Timer,
     vec,
     Vector
 } from 'excalibur';
@@ -32,7 +33,7 @@ const font24 = new Font({
 /** Metadata. */
 export const metadata: XellyMetadata = {
     type: XellyGameType.Realtime,
-    deps: ['dictionary']
+    deps: ['dictionary', 'widget']
 };
 
 const makeDraggable = (engine: Engine, actor: Actor) => {
@@ -67,7 +68,8 @@ const makeDraggable = (engine: Engine, actor: Actor) => {
 /** Install. */
 export const install: XellyInstallFunction = (context: XellyContext, engine: Engine) => {
     const dict = context.deps!['dictionary'] as any;
-    // todo console.log(dict.commonWords);
+    const widget = context.deps!['widget'] as any;
+
     const message = "Hello, world!";
     const messageDimensions = font24.measureText(message);
     const label = new Label({
@@ -99,4 +101,52 @@ export const install: XellyInstallFunction = (context: XellyContext, engine: Eng
         engine.add(currentWordLabel);
     };
     cycle_();
+
+    // --
+    const timer = new Timer({
+        action: () => {
+            setupTickle_();
+        },
+        interval: 1500,
+        repeats: false
+    });
+    engine.add(timer);
+
+    let currentTickleLabel: Actor | undefined = undefined;
+    const tickled_ = () => {
+        if (currentTickleLabel) {
+            currentTickleLabel.kill();
+        }
+        const msg = '...tickled...';
+        const dims = font16.measureText(msg);
+        currentTickleLabel = new Label({
+            text: msg,
+            font: font16,
+            pos: vec(5, (engine.drawHeight - dims.height - 5))
+        });
+        engine.add(currentTickleLabel);
+        timer.start();
+    };
+    const setupTickle_ = () => {
+        if (currentTickleLabel) {
+            currentTickleLabel.kill();
+        }
+        const msg = 'tickle!';
+        const dims = font16.measureText(msg);
+        currentTickleLabel = new Label({
+            text: msg,
+            font: font16,
+            pos: vec(5, (engine.drawHeight - dims.height - 5))
+        });
+        currentTickleLabel.on('pointerdown', () => {
+            currentTickleLabel!.off('pointerdown');
+            widget.tickle().then((resp: any) => {
+                if (resp.tickled === true) {
+                    tickled_();
+                }
+            });
+        })
+        engine.add(currentTickleLabel);
+    };
+    setupTickle_();
 };

@@ -18,8 +18,7 @@ import {ballImageSource} from './ball';
 
 /** Metadata. */
 export const metadata: XellyMetadata = {
-    type: XellyGameType.Interactive,
-    deps: ['dictionary']
+    type: XellyGameType.Interactive
 };
 
 const makeDraggable__ = (engine: Engine, actor: Actor) => {
@@ -89,10 +88,6 @@ const makeDraggable__ = (engine: Engine, actor: Actor) => {
 
 /** Install. */
 export const install: XellyInstallFunction = (context: XellyContext, engine: Engine) => {
-    const dict = context.deps!['dictionary'] as any;
-    const word = dict[Math.floor(Math.random() * dict.length)];
-    console.log(word);
-
     engine.physics.solver = SolverStrategy.Realistic;
     engine.physics.gravity = vec(0, 800);
 
